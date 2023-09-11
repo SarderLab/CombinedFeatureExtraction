@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<executable>
+  <category>HistomicsTK</category>
+  <title>Feature Extraction</title>
+  <description>FTX</description>
+  <version>0.1.0</version>
+  <documentation-url>https://digitalslidearchive.github.io/HistomicsTK/</documentation-url>
+  <license>Apache 2.0</license>
+  <contributor>Praveen Kumar Dande (UFL)</contributor>
+  <acknowledgements>This work is part of efforts in digital pathology by the Sarder Lab: UFL.</acknowledgements>
+  <parameters>
+    <label>IO</label>
+    <description>Input/output parameters.</description>
+    <image>
+      <name>input_image</name>
+      <label>Input Image</label>
+      <description>Input Filename </description>
+      <channel>input</channel>
+      <index>0</index>
+    </image>
+    <directory>
+      <name>basedir</name>
+      <label>Base Directory</label>
+      <description>Base Directory for the image</description>
+      <channel>input</channel>
+      <index>1</index>
+    </directory>
+    
+    <integer>
+      <name>threshold_nuclei</name>
+      <label>Threshold for Nuclei</label>
+      <description> Threshold for Nuclei segmentation</description>
+      <channel>input</channel>
+      <index>2</index>
+    </integer>
+    <integer>
+      <name>minsize_nuclei</name>
+      <label>Minsize for Nuclei</label>
+      <description> Minsize for Nuclei segmentation</description>
+      <channel>input</channel>
+      <index>3</index>
+    </integer>
+    <integer>
+      <name>threshold_PAS</name>
+      <label>Threshold for PAS</label>
+      <description> Threshold for PAS</description>
+      <channel>input</channel>
+      <index>4</index>
+    </integer>
+    <integer>
+      <name>minsize_PAS</name>
+      <label>Minsize for PAS</label>
+      <description> Minsize for PAS segmentation</description>
+      <channel>input</channel>
+      <index>5</index>
+    </integer>
+    <integer>
+      <name>threshold_LAS</name>
+      <label>Threshold for LAS</label>
+      <description> Threshold for LAS</description>
+      <channel>input</channel>
+      <index>6</index>
+    </integer>
+    <integer>
+      <name>minsize_LAS</name>
+      <label>Minsize for LAS</label>
+      <description> Minsize for LAS segmentation</description>
+      <channel>input</channel>
+      <index>7</index>
+    </integer>
+  </parameters>
+  <parameters advanced="true">
+    <label>Girder API URL and Key</label>
+    <description>A Girder API URL and token for Girder client</description>
+    <string>
+      <name>girderApiUrl</name>
+      <longflag>api-url</longflag>
+      <label>Girder API URL</label>
+      <description>A Girder API URL (e.g., https://girder.example.com:443/api/v1)</description>
+      <default></default>
+    </string>
+    <string>
+      <name>girderToken</name>
+      <longflag>token</longflag>
+      <label>Girder API Token</label>
+      <description>A Girder token</description>
+      <default></default>
+    </string>
+  </parameters>
+</executable>
