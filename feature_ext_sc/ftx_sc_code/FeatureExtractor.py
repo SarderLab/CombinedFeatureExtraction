@@ -112,8 +112,8 @@ class FeatureExtractor:
                                 self.annotations[a_idx]['annotation']['elements'][c_idx] = comp
 
                     # Outputting compartment features to excel file (one sheet per feature category)
-                    with pd.ExcelWriter(self.output_path+f'{ann["annotation"]["name"]}_Features.xlsx') as writer:
-                        filenames.append(self.output_path+f'{ann["annotation"]["name"]}_Features.xlsx')
+                    with pd.ExcelWriter(self.output_path+'/'+f'{ann["annotation"]["name"]}_Features.xlsx') as writer:
+                        filenames.append(self.output_path+'/'+f'{ann["annotation"]["name"]}_Features.xlsx')
                         for feat_cat in compartment_feature_dict:
                             feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
                             feat_df.to_excel(writer,sheet_name = feat_cat)
