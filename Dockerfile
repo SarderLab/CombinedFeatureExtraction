@@ -8,12 +8,6 @@ FROM python:3.11
 
 LABEL maintainer="Sumanth Devarasetty and Sam Border - Computational Microscopy Imaging Lab. <sumanth.devarasetty@medicine.ufl.edu> <samuel.border@medicine.ufl.edu>"
 
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-
-# Remove bad repos
-RUN rm \
-    /etc/apt/sources.list.d/cuda.list
 
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends software-properties-common && \
