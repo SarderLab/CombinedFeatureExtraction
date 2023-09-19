@@ -4,9 +4,9 @@
   <title>Feature Extraction</title>
   <description>FTX</description>
   <version>0.1.0</version>
-  <documentation-url>https://digitalslidearchive.github.io/HistomicsTK/</documentation-url>
+  <documentation-url>https://github.com/SarderLab/Feature_Extraction_SubCompartments/</documentation-url>
   <license>Apache 2.0</license>
-  <contributor>Praveen Kumar Dande (UFL)</contributor>
+  <contributor>Sam Border (UFL)</contributor>
   <acknowledgements>This work is part of efforts in digital pathology by the Sarder Lab: UFL.</acknowledgements>
   <parameters>
     <label>IO</label>
@@ -21,7 +21,7 @@
     <directory>
       <name>basedir</name>
       <label>Base Directory</label>
-      <description>Base Directory for the image</description>
+      <description>Parent folder or collection for the current image</description>
       <channel>input</channel>
       <index>1</index>
     </directory>
@@ -29,42 +29,48 @@
     <integer>
       <name>threshold_nuclei</name>
       <label>Threshold for Nuclei</label>
-      <description> Threshold for Nuclei segmentation</description>
+      <description> Pixel intensity threshold for nuclear subcompartment</description>
+      <default>200</default>
       <channel>input</channel>
       <index>2</index>
     </integer>
     <integer>
       <name>minsize_nuclei</name>
-      <label>Minsize for Nuclei</label>
-      <description> Minsize for Nuclei segmentation</description>
+      <label>Minimum Size for Nuclei</label>
+      <description> Minimum size for nuclear objects</description>
+      <default>20</default>
       <channel>input</channel>
       <index>3</index>
     </integer>
     <integer>
       <name>threshold_PAS</name>
       <label>Threshold for PAS</label>
-      <description> Threshold for PAS</description>
+      <description> Pixel intensity for PAS subcompartment (if a pixel does not already belong to the nuclei subcompartment)</description>
+      <default>50</default>
       <channel>input</channel>
       <index>4</index>
     </integer>
     <integer>
       <name>minsize_PAS</name>
-      <label>Minsize for PAS</label>
-      <description> Minsize for PAS segmentation</description>
+      <label>Minimum Size PAS</label>
+      <description> Minimum size for PAS objects</description>
+      <default>20</default>
       <channel>input</channel>
       <index>5</index>
     </integer>
     <integer>
-      <name>threshold_LAS</name>
-      <label>Threshold for LAS</label>
-      <description> Threshold for LAS</description>
+      <name>threshold_LS</name>
+      <label>Threshold for Luminal Space</label>
+      <description> Pixel intensity for Luminal Space subcompartment (if a pixel does not already belong to either the nuclei or PAS subcompartment)</description>
+      <default>0</default>
       <channel>input</channel>
       <index>6</index>
     </integer>
     <integer>
-      <name>minsize_LAS</name>
-      <label>Minsize for LAS</label>
-      <description> Minsize for LAS segmentation</description>
+      <name>minsize_LS</name>
+      <label>Mininum Size Luminal Space</label>
+      <description> Minimum size for Luminal Space objects</description>
+      <default>0</default>
       <channel>input</channel>
       <index>7</index>
     </integer>
@@ -83,8 +89,32 @@
       <name>girderToken</name>
       <longflag>token</longflag>
       <label>Girder API Token</label>
-      <description>A Girder token</description>
+      <description>A Girder token identifying a user session</description>
       <default></default>
     </string>
+    <string>
+      <name>featureCats</name>
+      <label>Types of Features</label>
+      <description>Types of morphometric features to include (comma separated list, remove features that aren't desired, replace spaces with underscores)</description>
+      <default>"Distance_Transform_Features,Color_Features,Texture_Features,Morphological_Features"</default>
+    </string>
+    <string>
+      <name>ignoreAnns</name>
+      <label>Ignore Annotations</label>
+      <description>Specify annotation names to ignore (spots and interstitium are automatically skipped, comma separated list)</description>
+      <default>""</default>
+    </string>
+    <boolean>
+      <name>returnXlsx</name>
+      <label>Return Excel File(s)</label>
+      <description>Whether or not to output excel files containing morphometric features (must also specify path)</description>
+      <default>0</default>
+    </boolean>
+    <directory>
+      <name>outputPath</name>
+      <label>Excel File(s) Output Path</label>
+      <description>Base path where morphometric files are saved to (if specified in previous parameter)</description>
+      <deafault></default>
+    </directory>
   </parameters>
 </executable>

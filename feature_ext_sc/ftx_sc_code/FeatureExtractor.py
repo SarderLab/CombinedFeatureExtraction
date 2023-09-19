@@ -21,43 +21,49 @@ from skimage.feature import peak_local_max
 from skimage import exposure
 
 import girder_client
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import requests
 from io import BytesIO
 from skimage.draw import polygon
 import pandas as pd
 import json
-import argparse
 from tqdm import tqdm
 import sys
 import os
 from matplotlib import pyplot as plt
 from skimage.color import label2rgb
-# create figure
 
 import shutil
-filenames = []
+
 class FeatureExtractor:
     def __init__(self,
-                 girder_api_url: str,
-                 user_token: str,
+                 girder_client,
                  slide_item_id: str,
                  sub_seg_params: list,
                  feature_list: list,
-                 output_path: str):
+                 skip_structures: list,
+                 output_path: list,
+                 ):
 
         # Initializing properties of FeatureExtractor object
-        self.gc = girder_client.GirderClient(apiUrl=girder_api_url)
-        self.user_token = user_token
+        self.gc = girder_client
+        self.user_token = self.gc.get('/token/session')['token']
         self.sub_seg_params = sub_seg_params
         self.slide_item_id = slide_item_id
         self.feature_list = feature_list
+        self.skip_structures = skip_structures
         self.output_path = output_path
+
+        # If outputting excel files, create a tmp directory
+        self.intermediate_output_path = self.output_path[0]
+        if not self.intermediate_output_path is None:
+            os.makedirs(self.intermediate_output_path,exist_ok=True)
+            output_filenames = []
 
         # Making feature extract list
         self.feature_extract_list = {} 
-        
 
+        # Checking inputs in self.feature_extract_list
         for f in self.feature_list:
             if f=='Distance Transform Features':
                 self.feature_extract_list[f] = lambda comp: self.calculate_distance_transform_features(comp)
@@ -70,30 +76,60 @@ class FeatureExtractor:
                 
             elif f=='Morphological Features':
                 self.feature_extract_list[f] = lambda comp: self.calculate_morphological_features(comp)
+
+            else:
+                print(f'Invalid feature type: {f}')
                 
         # Getting the names of the sub-compartments
         self.sub_comp_names = [i['name'] for i in self.sub_seg_params]
 
+        # Names key to fix output annotation names
+        self.names_key = {
+            'non_globally_sclerotic_glomeruli':'Glomeruli',
+            'globally_sclerotic_glomeruli':'Sclerotic Glomeruli',
+            'arteries/arterioles':'Arteries and Arterioles'
+        }
+
         # Getting annotations
         self.annotations = self.gc.get(f'annotation/item/{self.slide_item_id}')
+        
+        agg_feat_metadata = {}
         # Iterating through annotations and extracting features
         for a_idx, ann in tqdm(enumerate(self.annotations)):
             if 'annotation' in ann:
                 if not 'interstitium' in ann['annotation']['name'] and not ann['annotation']['name'] == 'Spots':
+                    
+                    # Checking for skip annotations
+                    if ann['annotation']['name'] in self.skip_structures:
+                        print(f'Skipping {ann["annotation"]["name"]}')
+                        continue
+
+                    # Replacing names if present in names key
+                    if ann['annotation']['name'] in list(self.names_key.keys()):
+                        ann['annotation']['name'] = self.names_key[ann['annotation']['name']]
 
                     # Initialize annotation/compartment dictionary, keys for each feature category specified in self.feature_list
                     compartment_feature_dict = {i:[] for i in self.feature_list}
 
                     # Iterating through elements in annotation
+                    compartment_ids = []
                     for c_idx,comp in tqdm(enumerate(ann['annotation']['elements'])):
-                        # Extract image, mask, and sub-compartment mask
-                        image, mask = self.grab_image_and_mask(comp['points'])
-                        sub_compartment_mask = self.sub_segment_image(image, mask)
                         
+                        # Extract image, mask, and sub-compartment mask
+                        try:
+                            image, mask = self.grab_image_and_mask(comp['points'])
+                            sub_compartment_mask = self.sub_segment_image(image, mask)
+                        except UnidentifiedImageError:
+                            print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
+                            print(comp['points'])
+                            continue
+
                         # Gettining rid of structures with areas less than the minimum size for each subcompartment
                         if np.sum(np.sum(sub_compartment_mask,axis=-1))>0:
                             if 'user' not in comp:
                                 comp['user'] = {}
+
+                            compartment_ids.append(ann['annotation']['name']+f'_{c_idx}')
 
                             # Iterating through feature extraction function handles
                             for feat in self.feature_extract_list:
@@ -111,16 +147,43 @@ class FeatureExtractor:
                                 
                                 self.annotations[a_idx]['annotation']['elements'][c_idx] = comp
 
-                    # Outputting compartment features to excel file (one sheet per feature category)
-                    with pd.ExcelWriter(self.output_path+'/'+f'{ann["annotation"]["name"]}_Features.xlsx') as writer:
-                        filenames.append(self.output_path+'/'+f'{ann["annotation"]["name"]}_Features.xlsx')
+                    if not self.output_path[0] is None:
+                        # Outputting compartment features to excel file (one sheet per feature category)
+                        output_file = self.output_path[0]+'/'+f'{ann["annotation"]["name"]}_Features.xlsx'
+                        output_filenames.append(output_file)
+
+                        with pd.ExcelWriter(output_file,mode='w',engine='openpyxl') as writer:
+                            for feat_cat in compartment_feature_dict:
+
+                                feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
+                                feat_df['compartment_ids'] = compartment_ids
+
+                                # Writing sheet in excel file
+                                feat_df.to_excel(writer,sheet_name = feat_cat)
+
+                                # Aggregating features
+                                agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
+                    
+                    else:
                         for feat_cat in compartment_feature_dict:
                             feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
-                            feat_df.to_excel(writer,sheet_name = feat_cat)
+
+                            # Aggregating features 
+                            agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
+        
+        # Putting metadata
+        self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
 
         # Posting updated annotations to slide
         self.post_annotations()
 
+        # Adding output excel files if present
+        if not self.output_path[0] is None:
+            print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
+            for path in output_filenames:
+                self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
+
+            shutil.rmtree(self.output_path[0])
 
     def grab_image_and_mask(self,coordinates):
 
@@ -393,6 +456,36 @@ class FeatureExtractor:
 
         return feature_values
 
+    def aggregate_features(self,feature_df):
+        # Calculate summary statistics for one category of features and add those to the slide's metadata
+        # Summary statistics include sum, mean, standard deviation, median, minimum, and maximum
+        summ_stats = {
+            'Sum': (lambda stats_array: np.nansum(stats_array,axis=0)),
+            'Mean':(lambda stats_array: np.nanmean(stats_array,axis=0)),
+            'Standard Deviation':(lambda stats_array: np.nanstd(stats_array,axis=0)),
+            'Median':(lambda stats_array: np.nanmedian(stats_array,axis=0)),
+            'Minimum':(lambda stats_array: np.nanmin(stats_array,axis=0)),
+            'Maximum':(lambda stats_array: np.nanmax(stats_array,axis=0))
+            }
+        agg_feat_dict = {}
+
+        # Storing compartment ids (not really used in this step)
+        feature_ids = feature_df['compartment_ids'].tolist()
+        # Dropping str feature
+        feature_df.drop(columns=['compartment_ids'],inplace=True)
+
+        # Storing names of features and creating values array
+        feature_names = feature_df.columns.tolist()
+        feature_values = feature_df.values
+        for s in summ_stats:
+
+            stats_array = summ_stats[s](feature_values.copy())
+            summ_feat_list = stats_array.tolist()
+            for feat,summ in zip(feature_names,summ_feat_list):
+                agg_feat_dict[f'{feat}_{s}'] = np.float64(summ)
+
+        return agg_feat_dict
+
     def post_annotations(self):
 
         # Deleting old annotations
@@ -406,134 +499,3 @@ class FeatureExtractor:
                          'Content-Type':'application/json'
                          }
                     )
-
-
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--basedir')
-parser.add_argument('--girderApiUrl')
-parser.add_argument('--girderToken')
-parser.add_argument('--input_image')
-parser.add_argument('--threshold_nuclei')
-parser.add_argument('--minsize_nuclei')
-parser.add_argument('--threshold_PAS')
-parser.add_argument('--minsize_PAS')
-parser.add_argument('--threshold_LAS')
-parser.add_argument('--minsize_LAS')
-args = parser.parse_args()
-
-gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
-gc.setToken(args.girderToken)
-#getting file_id
-folder = args.basedir
-girder_folder_id = folder.split('/')[-2]
-_ = os.system("printf 'Using data from girder_client Folder: {}\n'".format(folder))
-file_name = args.input_image.split('/')[-1]
-files = list(gc.listItem(girder_folder_id))
-item_dict = dict()
-for file in files:
-    d = {file['name']: file['_id']}
-    item_dict.update(d)
-print(item_dict)
-print(item_dict[file_name])
-
-file_id = item_dict[file_name]
-
-
-        
-threshold_nuclei = int(args.threshold_nuclei)
-minsize_nuclei =  int(args.minsize_nuclei)
-threshold_PAS = int(args.threshold_PAS)
-minsize_PAS = int(args.minsize_PAS)
-threshold_LAS = int(args.threshold_LAS)
-minsize_LAS = int(args.minsize_LAS)
-    
-
-sub_seg_params = [
-        {
-            'name':'Nuclei',
-            'threshold':threshold_nuclei,
-            'min_size':minsize_nuclei,
-            'color':[0,0,255],
-            'marks_color':'rgb(0,0,255)'
-        },            
-        {
-            'name':'PAS',
-            'threshold':threshold_PAS,
-            'min_size':minsize_PAS,
-            'color':[255,0,0],
-            'marks_color':'rgb(255,0,0)'
-        },
-        {
-            'name':'Luminal Space',
-            'threshold':threshold_LAS,
-            'min_size':minsize_LAS,
-            'color':[0,255,0],
-            'marks_color':'rgb(0,255,0)'
-        }
-    ]
-
-feature_list = ['Distance Transform Features','Color Features','Texture Features','Morphological Features']
-
-output_path = args.basedir + '/tmp'
-os.makedirs(args.basedir + "/tmp", exist_ok=True)
-
-FeatureExtractor(args.girderApiUrl, args.girderToken, file_id, sub_seg_params, feature_list, output_path)
-
-for path in filenames:
-    gc.uploadFileToItem(file_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
-
-shutil.rmtree(output_path)
-print("done")
-
-'''
-def main():
-
-    import os
-
-    # Using DSA as base directory for storage and accessing files=
-    dsa_url = 'http://ec2-3-230-122-132.compute-1.amazonaws.com:8080/api/v1/'
-    #username = os.environ.get('DSA_USER')
-    #p_word = os.environ.get('DSA_PWORD')
-
-    gc = girder_client.GirderClient(apiUrl=dsa_url)
-    #gc.authenticate(username,p_word)
-    #user_token = gc.get('token/session')['token']
-    user_token = "6Rvod0MFrzXJWK5XDxxMO9qy63zMzzXWLGrml3rpZBiVQcgQsl7c2R7PppdNmCVx"
-
-    slide_id = '64fa04772d82d04be3e59346'
-    sub_seg_params = [
-        {
-            'name':'Nuclei',
-            'threshold':200,
-            'min_size':45,
-            'color':[0,0,255],
-            'marks_color':'rgb(0,0,255)'
-        },            
-        {
-            'name':'PAS',
-            'threshold':45,
-            'min_size':20,
-            'color':[255,0,0],
-            'marks_color':'rgb(255,0,0)'
-        },
-        {
-            'name':'Luminal Space',
-            'threshold':0,
-            'min_size':20,
-            'color':[0,255,0],
-            'marks_color':'rgb(0,255,0)'
-        }
-    ]
-
-    feature_list = ['Distance Transform Features','Color Features','Texture Features','Morphological Features']
-    output_path = '/Users/sumanthdevarasetty/Desktop/FTX/'
-
-    FeatureExtractor(dsa_url, user_token,slide_id,sub_seg_params,feature_list,output_path)
-
-
-if __name__=='__main__':
-    main()
-
-'''
