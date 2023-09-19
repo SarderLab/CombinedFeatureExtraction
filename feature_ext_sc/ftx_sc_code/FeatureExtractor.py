@@ -162,14 +162,16 @@ class FeatureExtractor:
                                 feat_df.to_excel(writer,sheet_name = feat_cat)
 
                                 # Aggregating features
-                                agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
+                                if not feat_df.empty:
+                                    agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
                     
                     else:
                         for feat_cat in compartment_feature_dict:
                             feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
 
                             # Aggregating features 
-                            agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
+                            if not feat_df.empty:
+                                agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
         
         # Putting metadata
         self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
