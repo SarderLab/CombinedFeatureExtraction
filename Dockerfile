@@ -35,8 +35,10 @@ RUN apt-get update && \
 
 RUN apt-get update ##[edited]
 
-
 RUN apt-get install libxml2-dev libxslt1-dev -y
+
+# Required for opencv-python (cv2)
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
 
 WORKDIR /
 # Make Python3 the default and install pip.  Whichever is done last determines
