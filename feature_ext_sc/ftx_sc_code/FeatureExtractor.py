@@ -7,7 +7,6 @@ Morphometric feature extraction features for sub-compartments within segmented F
 
 import numpy as np
 import cv2
-from skimage import measure
 from skimage.feature import graycomatrix, graycoprops
 from skimage.measure import regionprops
 from skimage.color import rgb2gray, rgb2hsv
@@ -20,7 +19,6 @@ from scipy import ndimage as ndi
 from skimage.feature import peak_local_max
 from skimage import exposure
 
-import girder_client
 from PIL import Image, UnidentifiedImageError
 import requests
 from io import BytesIO
@@ -28,16 +26,13 @@ from skimage.draw import polygon
 import pandas as pd
 import json
 from tqdm import tqdm
-import sys
 import os
-from matplotlib import pyplot as plt
-from skimage.color import label2rgb
 
 import shutil
 
 class FeatureExtractor:
     def __init__(self,
-                 girder_client,
+                 gc,
                  slide_item_id: str,
                  sub_seg_params: list,
                  feature_list: list,
@@ -46,7 +41,7 @@ class FeatureExtractor:
                  ):
 
         # Initializing properties of FeatureExtractor object
-        self.gc = girder_client
+        self.gc = gc
         self.user_token = self.gc.get('/token/session')['token']
         self.sub_seg_params = sub_seg_params
         self.slide_item_id = slide_item_id

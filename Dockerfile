@@ -8,27 +8,19 @@ FROM python:3.11
 
 LABEL maintainer="Sumanth Devarasetty and Sam Border - Computational Microscopy Imaging Lab. <sumanth.devarasetty@medicine.ufl.edu> <samuel.border@medicine.ufl.edu>"
 
-
 RUN apt-get update && \
-    #apt-get install --yes --no-install-recommends software-properties-common && \
-    #add-apt-repository ppa:deadsnakes/ppa && \
     apt-get autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get --yes --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends \
     git \
     wget \
-    python-qt4 \
-    python3-pyqt4 \
     curl \
     ca-certificates \
     libcurl4-openssl-dev \
     libexpat1-dev \
     unzip \
     libhdf5-dev \
-    libpython-dev \
-    libpython3-dev \
     software-properties-common \
     libssl-dev \
     # Standard build tools \
@@ -41,12 +33,8 @@ RUN apt-get update && \
     libmemcached-dev && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-#CMD echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECKPOINT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 RUN apt-get update ##[edited]
-#RUN apt-get install 'ffmpeg'\
-#    'libsm6'\
-#    'libxext6'  -y
+
 
 RUN apt-get install libxml2-dev libxslt1-dev -y
 
