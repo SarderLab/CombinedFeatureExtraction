@@ -114,7 +114,7 @@
       <name>outputPath</name>
       <label>Excel File(s) Output Path</label>
       <description>Base path where morphometric files are saved to (if specified in previous parameter)</description>
-      <deafault></default>
+      <default></default>
     </directory>
   </parameters>
 </executable>

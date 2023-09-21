@@ -10,8 +10,8 @@ LABEL maintainer="Sumanth Devarasetty and Sam Border - Computational Microscopy 
 
 
 RUN apt-get update && \
-    apt-get install --yes --no-install-recommends software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
+    #apt-get install --yes --no-install-recommends software-properties-common && \
+    #add-apt-repository ppa:deadsnakes/ppa && \
     apt-get autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN apt-get update && \
