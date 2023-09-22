@@ -87,7 +87,7 @@ def main(args):
 
     # Defining feature extractor object which should take care of the rest
     FeatureExtractor(
-        girder_client = gc,
+        gc = gc,
         slide_item_id = file_id,
         sub_seg_params=sub_seg_params,
         feature_list = feature_list,
