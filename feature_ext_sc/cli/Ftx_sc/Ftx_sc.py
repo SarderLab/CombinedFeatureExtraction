@@ -34,7 +34,7 @@ def main(args):
     folder_id = basedir.split('/')[-2]
 
     # Finding the id for the current WSI (input_image)
-    file_name = args.input_image
+    file_name = args.input_image.split(os.sep)[-1]
     _ = os.system("printf 'Input Image supplied: {}\n'".format(file_name))
 
     all_files = list(gc.listItem(folder_id))

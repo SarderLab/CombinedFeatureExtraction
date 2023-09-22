@@ -94,24 +94,28 @@
     </string>
     <string>
       <name>featureCats</name>
+      <longflag>feature_categories</longflag>
       <label>Types of Features</label>
       <description>Types of morphometric features to include (comma separated list, remove features that aren't desired, replace spaces with underscores)</description>
       <default>"Distance_Transform_Features,Color_Features,Texture_Features,Morphological_Features"</default>
     </string>
     <string>
       <name>ignoreAnns</name>
+      <longflag>ignore_anns</longflag>
       <label>Ignore Annotations</label>
       <description>Specify annotation names to ignore (spots and interstitium are automatically skipped, comma separated list)</description>
       <default>""</default>
     </string>
     <boolean>
       <name>returnXlsx</name>
+      <longflag>return_xlsx</longflag>
       <label>Return Excel File(s)</label>
       <description>Whether or not to output excel files containing morphometric features (must also specify path)</description>
       <default>0</default>
     </boolean>
     <directory>
       <name>outputPath</name>
+      <longflag>output_path</longflag>
       <label>Excel File(s) Output Path</label>
       <description>Base path where morphometric files are saved to (if specified in previous parameter)</description>
       <default></default>
