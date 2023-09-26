@@ -70,9 +70,11 @@ def main(args):
     ]
 
     # Getting list of features to calculate
-    feature_list = args.featureCats.replace('_',' ').split(',')
+    feature_list = args.featureCats.split(',')
     if not type(feature_list)==list:
         feature_list = [feature_list]
+    
+    feature_list = [i.replace('"','') for i in feature_list]
 
     # Getting structures to skip
     skip_structures = args.ignoreAnns.split(',')

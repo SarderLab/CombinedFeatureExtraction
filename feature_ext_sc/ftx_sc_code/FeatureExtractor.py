@@ -60,6 +60,7 @@ class FeatureExtractor:
 
         # Checking inputs in self.feature_extract_list
         for f in self.feature_list:
+            print(f'Feature Type: {f}')
             if f=='Distance Transform Features':
                 self.feature_extract_list[f] = lambda comp: self.calculate_distance_transform_features(comp)
                 
@@ -142,31 +143,33 @@ class FeatureExtractor:
                                 
                                 self.annotations[a_idx]['annotation']['elements'][c_idx] = comp
 
-                    if not self.output_path[0] is None:
-                        # Outputting compartment features to excel file (one sheet per feature category)
-                        output_file = self.output_path[0]+'/'+f'{ann["annotation"]["name"]}_Features.xlsx'
-                        output_filenames.append(output_file)
+                    if len(compartment_ids)>0:
+                        if not self.output_path[0] is None:
+                            # Outputting compartment features to excel file (one sheet per feature category)
+                            output_file = self.output_path[0]+'/'+f'{ann["annotation"]["name"]}_Features.xlsx'
+                            output_filenames.append(output_file)
 
-                        with pd.ExcelWriter(output_file,mode='w',engine='openpyxl') as writer:
+                            with pd.ExcelWriter(output_file,mode='w',engine='openpyxl') as writer:
+                                for feat_cat in compartment_feature_dict:
+
+                                    feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
+                                    feat_df['compartment_ids'] = compartment_ids
+
+                                    # Writing sheet in excel file
+                                    feat_df.to_excel(writer,sheet_name = feat_cat)
+
+                                    # Aggregating features
+                                    if not feat_df.empty:
+                                        agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
+                        
+                        else:
                             for feat_cat in compartment_feature_dict:
-
                                 feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
                                 feat_df['compartment_ids'] = compartment_ids
 
-                                # Writing sheet in excel file
-                                feat_df.to_excel(writer,sheet_name = feat_cat)
-
-                                # Aggregating features
+                                # Aggregating features 
                                 if not feat_df.empty:
                                     agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
-                    
-                    else:
-                        for feat_cat in compartment_feature_dict:
-                            feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
-
-                            # Aggregating features 
-                            if not feat_df.empty:
-                                agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
         
         # Putting metadata
         self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
