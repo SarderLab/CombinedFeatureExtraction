@@ -97,7 +97,7 @@
       <longflag>feature_categories</longflag>
       <label>Types of Features</label>
       <description>Types of morphometric features to include (comma separated list, remove features that aren't desired, replace spaces with underscores)</description>
-      <default>"Distance Transform Features,Color Features,Texture Features,Morphological Features"</default>
+      <default>Distance Transform Features,Color Features,Texture Features,Morphological Features</default>
     </string>
     <string>
       <name>ignoreAnns</name>
