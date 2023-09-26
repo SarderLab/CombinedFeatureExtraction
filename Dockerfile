@@ -74,6 +74,7 @@ WORKDIR $ftx_sc_path
 #   Upgrade setuptools, as the version in Conda won't upgrade cleanly unless it
 # is ignored.
 
+# Installing packages in setup.py
 RUN pip install --no-cache-dir --upgrade --ignore-installed pip setuptools && \
     pip install --no-cache-dir .  && \
     rm -rf /root/.cache/pip/*
