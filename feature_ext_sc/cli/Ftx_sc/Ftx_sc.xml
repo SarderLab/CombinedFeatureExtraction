@@ -25,7 +25,6 @@
       <channel>input</channel>
       <index>1</index>
     </directory>
-    
     <integer>
       <name>threshold_nuclei</name>
       <label>Threshold for Nuclei</label>

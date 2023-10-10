@@ -52,8 +52,6 @@ setup(
         'Pillow==9.5.0',
         'pandas==2.0.3',
         'imageio==2.29.0',
-        'shapely==2.0.1',
-        'matplotlib==3.7.2',
         'opencv-python==4.8.0.76',
         'scikit-image==0.20.0',
         'tqdm==4.65.0',
@@ -64,7 +62,6 @@ setup(
         'girder-client',
         # cli
         'ctk-cli',
-        'wsi-annotations-kit==1.2.18',
     ],
     license='Apache Software License 2.0',
     keywords='Ftx_sc',

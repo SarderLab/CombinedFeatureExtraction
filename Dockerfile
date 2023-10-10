@@ -44,16 +44,16 @@ WORKDIR /
 # Make Python3 the default and install pip.  Whichever is done last determines
 # the default python version for pip.
 
-#Make a specific version of python the default and install pip
-RUN rm -f /usr/bin/python && \
-    rm -f /usr/bin/python3 && \
-    ln `which python3.11` /usr/bin/python && \
-    ln `which python3.11` /usr/bin/python3 && \
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py && \
-    ln `which pip3` /usr/bin/pip
-
+##Make a specific version of python the default and install pip
+#RUN rm -f /usr/bin/python && \
+#    rm -f /usr/bin/python3 && \
+#    ln `which python3.11` /usr/bin/python && \
+#    ln `which python3.11` /usr/bin/python3 && \
+#    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+#    python get-pip.py && \
+#    rm get-pip.py && \
+#    ln `which pip3` /usr/bin/pip
+#
 RUN which  python && \
     python --version
 
@@ -83,7 +83,7 @@ RUN pip install --no-cache-dir --upgrade --ignore-installed pip setuptools && \
 RUN python --version && pip --version && pip freeze
 
 # pregenerate font cache
-RUN python -c "from matplotlib import pylab"
+#RUN python -c "from matplotlib import pylab"
 
 # define entrypoint through which all CLIs can be run
 WORKDIR $ftx_sc_path/feature_ext_sc/cli
