@@ -83,7 +83,11 @@ class FeatureExtractor:
         self.names_key = {
             'non_globally_sclerotic_glomeruli':'Glomeruli',
             'globally_sclerotic_glomeruli':'Sclerotic Glomeruli',
-            'arteries/arterioles':'Arteries and Arterioles'
+            'arteries/arterioles':'Arteries and Arterioles',
+            'non_globally_sclerotic_glomeruli_manual':'Glomeruli',
+            'globally_sclerotic_glomeruli_manual':'Sclerotic Glomeruli',
+            'arteries/arterioles_manual':'Arteries and Arterioles',
+            'tubules_manual':'Tubules'
         }
 
         # Getting annotations
@@ -93,7 +97,7 @@ class FeatureExtractor:
         # Iterating through annotations and extracting features
         for a_idx, ann in tqdm(enumerate(self.annotations)):
             if 'annotation' in ann:
-                if not 'interstitium' in ann['annotation']['name'] and not ann['annotation']['name'] == 'Spots':
+                if not 'interstitium' in ann['annotation']['name']:
                     
                     # Checking for skip annotations
                     if ann['annotation']['name'] in self.skip_structures:
@@ -169,7 +173,9 @@ class FeatureExtractor:
 
                                 # Aggregating features 
                                 if not feat_df.empty:
-                                    agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
+                                    agg_feat_df = self.aggregate_features(feat_df)
+                                    for a_f in agg_feat_df:
+                                        agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'][a_f] = agg_feat_df[a_f]
         
         # Putting metadata
         self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
@@ -373,7 +379,7 @@ class FeatureExtractor:
                     feature_values[f"Standard Deviation {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = channel_value
             else:
                 # If compartment has no pixels, set values to zero
-                for i in range(3):
+                for i in range(len(self.sub_comp_names)):
                     feature_values[f"Mean {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = 0.0
                     feature_values[f"Standard Deviation {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = 0.0
 
@@ -409,12 +415,12 @@ class FeatureExtractor:
         object_area = np.sum(subcompartment_mask)
         for sc in range(len(self.sub_comp_names)):  # As there are 3 compartments
             subcompartment_area = np.sum(subcompartment_mask[:,:,sc])
-            feature_values[f"{self.sub_comp_names[sc]} Area By Object Area "] = subcompartment_area / object_area
-            feature_values[f"{self.sub_comp_names[sc]} Area "] = subcompartment_area
+            feature_values[f"{self.sub_comp_names[sc]} Area By Object Area"] = subcompartment_area / object_area
+            feature_values[f"{self.sub_comp_names[sc]} Area"] = subcompartment_area
 
         # Calculate Nuclei Number
         nuclei_number = np.max(label(subcompartment_mask[:,:,self.sub_comp_names.index('Nuclei')]))
-        feature_values[f"Nuclei Number {self.sub_comp_names[2]}"] = nuclei_number
+        feature_values[f"Nuclei Number"] = nuclei_number
 
         # Calculate Mean Aspect Ratio and Standard Deviation Aspect Ratio for the nuclei compartment
         nuclei_label = label(subcompartment_mask[:,:,self.sub_comp_names.index('Nuclei')])
@@ -422,37 +428,37 @@ class FeatureExtractor:
         aspect_ratios = [i.axis_major_length / i.axis_minor_length for i in nuclei_props]
 
         if not np.isnan(np.nanmean(aspect_ratios)):
-            feature_values[f"Mean Aspect Ratio {self.sub_comp_names[2]}"] = np.nanmean(aspect_ratios)
+            feature_values[f"Mean Aspect Ratio Nuclei"] = np.nanmean(aspect_ratios)
         else:
-            feature_values[f"Mean Aspect Ratio {self.sub_comp_names[2]}"] = 0
+            feature_values[f"Mean Aspect Ratio Nuclei"] = 0
         if not np.isnan(np.nanstd(aspect_ratios)):
-            feature_values[f"Standard Deviation Aspect Ratio {self.sub_comp_names[2]}"] = np.nanstd(aspect_ratios)
+            feature_values[f"Standard Deviation Aspect Ratio Nuclei"] = np.nanstd(aspect_ratios)
         else:
-            feature_values[f"Standard Deviation Aspect Ratio {self.sub_comp_names[2]}"] = 0
+            feature_values[f"Standard Deviation Aspect Ratio Nuclei"] = 0
 
         # Calculate Mean Nuclear Area for the nuclei compartment
         if nuclei_number>0:
-            feature_values[f"Mean Nuclei Area {self.sub_comp_names[2]}"] = np.sum(subcompartment_mask[:,:,self.sub_comp_names.index('Nuclei')]) / nuclei_number
+            feature_values[f"Mean Nuclear Area"] = np.sum(subcompartment_mask[:,:,self.sub_comp_names.index('Nuclei')]) / nuclei_number
         else:
-            feature_values[f"Mean Nuclei Area {self.sub_comp_names[2]}"] = 0
+            feature_values[f"Mean Nuclear Area"] = 0
 
         # Total Object Area
-        feature_values["Total Object Area Total compartment"] = object_area
+        feature_values["Total Object Area"] = object_area
 
         # Total Object Perimeter
-        feature_values["Total Object Perimeter Total compartment"] = object_props.perimeter
+        feature_values["Total Object Perimeter"] = object_props.perimeter
 
         # Total Object Aspect Ratio
         if not object_props.axis_minor_length==0:
-            feature_values["Total Object Aspect Ratio Total compartment"] = object_props.axis_major_length / object_props.axis_minor_length
+            feature_values["Total Object Aspect Ratio"] = object_props.axis_major_length / object_props.axis_minor_length
         else:
-            feature_values["Total Object Aspect Ratio Total compartment"] = 0
+            feature_values["Total Object Aspect Ratio"] = 0
 
         # Major Axis Length
-        feature_values["Major Axis Length Total compartment"] = object_props.axis_major_length
+        feature_values["Major Axis Length"] = object_props.axis_major_length
 
         # Minor Axis Length
-        feature_values["Minor Axis Length Total compartment"] = object_props.axis_minor_length
+        feature_values["Minor Axis Length"] = object_props.axis_minor_length
 
         return feature_values
 
@@ -492,10 +498,14 @@ class FeatureExtractor:
         self.gc.delete(f'annotation/item/{self.slide_item_id}?token={self.user_token}')
         
         # Updating with new annotations
-        self.gc.post(f'/annotation/item/{self.slide_item_id}?token={self.user_token}',
-                     data = json.dumps(self.annotations),
-                     headers={
-                         'X-HTTP-Method':'POST',
-                         'Content-Type':'application/json'
-                         }
-                    )
+        try:
+            self.gc.post(f'/annotation/item/{self.slide_item_id}?token={self.user_token}',
+                        data = json.dumps(self.annotations),
+                        headers={
+                            'X-HTTP-Method':'POST',
+                            'Content-Type':'application/json'
+                            }
+                        )
+        except json.decoder.JSONDecodeError as error:
+            print(vars(error))
+            print('JSONDecodeError encountered')
