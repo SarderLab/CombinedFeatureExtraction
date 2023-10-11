@@ -148,6 +148,8 @@ class FeatureExtractor:
                                 self.annotations[a_idx]['annotation']['elements'][c_idx] = comp
 
                     if len(compartment_ids)>0:
+
+                        agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = {}
                         if not self.output_path[0] is None:
                             # Outputting compartment features to excel file (one sheet per feature category)
                             output_file = self.output_path[0]+'/'+f'{ann["annotation"]["name"]}_Features.xlsx'
@@ -164,7 +166,9 @@ class FeatureExtractor:
 
                                     # Aggregating features
                                     if not feat_df.empty:
-                                        agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = self.aggregate_features(feat_df)
+                                        agg_feat_df = self.aggregate_features(feat_df)
+                                        for a_f in agg_feat_df:
+                                            agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'][a_f] = agg_feat_df[a_f]
                         
                         else:
                             for feat_cat in compartment_feature_dict:
