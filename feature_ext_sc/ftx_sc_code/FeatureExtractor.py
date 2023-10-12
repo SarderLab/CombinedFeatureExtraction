@@ -490,9 +490,13 @@ class FeatureExtractor:
         for s in summ_stats:
 
             stats_array = summ_stats[s](feature_values.copy())
+
             summ_feat_list = stats_array.tolist()
             for feat,summ in zip(feature_names,summ_feat_list):
-                agg_feat_dict[f'{feat}_{s}'] = np.float64(summ)
+                if not np.isnan(summ) and not np.isinf(summ):
+                    agg_feat_dict[f'{feat}_{s}'] = np.float64(summ)
+                else:
+                    agg_feat_dict[f'{feat}_{s}'] = np.float64(0.)
 
         return agg_feat_dict
 
