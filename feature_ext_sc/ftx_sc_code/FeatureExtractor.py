@@ -87,7 +87,8 @@ class FeatureExtractor:
             'non_globally_sclerotic_glomeruli_manual':'Glomeruli',
             'globally_sclerotic_glomeruli_manual':'Sclerotic Glomeruli',
             'arteries/arterioles_manual':'Arteries and Arterioles',
-            'tubules_manual':'Tubules'
+            'tubules_manual':'Tubules',
+            'gloms':'Glomeruli'
         }
 
         # Getting annotations

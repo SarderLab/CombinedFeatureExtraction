@@ -31,7 +31,7 @@ def main(args):
     # Accessing item id for the image
     basedir = args.basedir
     _ = os.system("printf 'Base Directory supplied: {}\n'".format(basedir))
-    folder_id = basedir.split('/')[-2]
+    folder_id = basedir.split(os.sep)[-2]
 
     # Finding the id for the current WSI (input_image)
     file_name = args.input_image.split(os.sep)[-1]
