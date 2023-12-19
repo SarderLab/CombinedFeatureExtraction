@@ -100,22 +100,5 @@ def main(args):
 
 if __name__ == "__main__":
 
-    class args:
-        def __init__(self):
-            self.basedir ="\\mnt\\girder_worker\\fabdb338d92449b7bb907d8eee53ede2\\6580b0274e590bbcdeaf9872\\FUSION_Upload_2023_12_18_15_48_38_498403"
-            self.featureCats ='Distance Transform Features,Color Features,Texture Features,Morphological Features'
-            self.girderApiUrl ="http://ec2-3-230-122-132.compute-1.amazonaws.com:8080/api/v1/"
-            self.girderToken = "SRuB2emRdpVFyiw4HcNx8nbPtvxOeRglWjPgPTssf72l5S8ihBCvl0MI4W4LVffs"
-            self.ignoreAnns = "\"\""
-            self.input_image = "\\V42N07-339_XY01_3781.tif"
-            self.minsize_LS = "20"
-            self.minsize_PAS = "20"
-            self.minsize_nuclei = "45"
-            self.returnXlsx = False
-            self.threshold_LS = "0"
-            self.threshold_PAS = "50"
-            self.threshold_nuclei = "215"
-        
-    args_obj = args()
-    #main(CLIArgumentParser().parse_args())
-    main(args_obj)
+
+    main(CLIArgumentParser().parse_args())
