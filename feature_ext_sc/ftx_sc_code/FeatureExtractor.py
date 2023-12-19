@@ -121,6 +121,7 @@ class FeatureExtractor:
                             image, mask = self.grab_image_and_mask(comp['points'])
                             sub_compartment_mask = self.sub_segment_image(image, mask)
                         except UnidentifiedImageError:
+                            # I believe this error occurs when the number of unique points is less than 3
                             print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
                             print(comp['points'])
                             continue
@@ -147,6 +148,8 @@ class FeatureExtractor:
                                     comp['user'][c_f] = np.float64(cat_feat[c_f])
                                 
                                 self.annotations[a_idx]['annotation']['elements'][c_idx] = comp
+                        else:
+                            continue
 
                     if len(compartment_ids)>0:
 
@@ -181,6 +184,8 @@ class FeatureExtractor:
                                     agg_feat_df = self.aggregate_features(feat_df)
                                     for a_f in agg_feat_df:
                                         agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'][a_f] = agg_feat_df[a_f]
+                    else:
+                        continue
         
         # Putting metadata
         self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
@@ -201,10 +206,10 @@ class FeatureExtractor:
         coordinates = np.squeeze(np.array(coordinates))
 
         # Defining bounding box:
-        min_x = np.min(coordinates[:,0])
-        min_y = np.min(coordinates[:,1])
-        max_x = np.max(coordinates[:,0])
-        max_y = np.max(coordinates[:,1])
+        min_x = int(np.min(coordinates[:,0]))
+        min_y = int(np.min(coordinates[:,1]))
+        max_x = int(np.max(coordinates[:,0]))
+        max_y = int(np.max(coordinates[:,1]))
 
         # Getting image from bbox region
         image = np.uint8(np.array(Image.open(BytesIO(requests.get(self.gc.urlBase+f'/item/{self.slide_item_id}/tiles/region?token={self.user_token}&left={min_x}&top={min_y}&right={max_x}&bottom={max_y}').content))))
@@ -233,7 +238,6 @@ class FeatureExtractor:
 
         # Converting image to HSV space (using saturation channel for thresholding)
         hsv_image = np.uint8(255*rgb2hsv(image)[:,:,1])
-
         # Applying histogram equalization
         hsv_image = np.uint8(255*exposure.equalize_hist(hsv_image))
         
