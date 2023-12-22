@@ -100,5 +100,29 @@ def main(args):
 
 if __name__ == "__main__":
 
+    """
+    class args_object:
+        def __init__(self):
+            self.girderApiUrl = "http://ec2-3-230-122-132.compute-1.amazonaws.com:8080/api/v1/"
+            self.girderToken = ""
 
+            self.basedir = ""
+            self.input_image = ""
+
+            self.threshold_nuclei = ""
+            self.threshold_PAS = ""
+            self.threshold_LS = ""
+            self.minsize_LS = ""
+            self.minsize_nuclei = ""
+            self.minsize_PAS = ""
+
+            self.featureCats = "Distance Transform Features,Color Features,Texture Features,Morphological Features"
+            self.ignoreAnns = ""
+            self.returnXlsx = False
+            self.outputPath = ""
+
+
+    args = args_object()
+    main(args)
+    """
     main(CLIArgumentParser().parse_args())
