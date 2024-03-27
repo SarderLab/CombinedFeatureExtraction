@@ -517,18 +517,19 @@ class FeatureExtractor:
 
     def post_annotations(self):
 
-        # Deleting old annotations
-        self.gc.delete(f'annotation/item/{self.slide_item_id}?token={self.user_token}')
-        
         # Updating with new annotations
-        try:
-            self.gc.post(f'/annotation/item/{self.slide_item_id}?token={self.user_token}',
-                        data = json.dumps(self.annotations),
-                        headers={
-                            'X-HTTP-Method':'POST',
-                            'Content-Type':'application/json'
-                            }
-                        )
-        except json.decoder.JSONDecodeError as error:
-            print(vars(error))
-            print('JSONDecodeError encountered')
+        for ann in self.annotations:
+            try:
+                json_string = json.dumps(self.annotations[ann])
+
+                self.gc.delete(f'annotation/{self.annotations[ann]["_id"]}?token={self.user_token}')
+                self.gc.post(f'/annotation/item/{self.slide_item_id}?token={self.user_token}',
+                    data = json_string,
+                    headers={
+                        'X-HTTP-Method':'POST',
+                        'Content-Type':'application/json'
+                        }
+                    )
+            
+            except json.decoder.JSONDecodeError as error:
+                print(f'Error occurred on {ann}')
