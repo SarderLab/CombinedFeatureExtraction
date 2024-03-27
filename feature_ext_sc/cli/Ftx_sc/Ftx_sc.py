@@ -81,6 +81,9 @@ def main(args):
     if not type(skip_structures)==list:
         skip_structures = [skip_structures]
 
+    # Whether or not to rename structures to nicer names
+    rename = args.rename
+
     # Output path for excel files (if specified)
     if args.returnXlsx:
         output_path = [basedir+'/tmp', args.outputPath]
@@ -95,6 +98,7 @@ def main(args):
         feature_list = feature_list,
         skip_structures = skip_structures,
         output_path = output_path
+        rename = rename
     )
 
 

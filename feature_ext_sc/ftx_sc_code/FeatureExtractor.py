@@ -39,6 +39,7 @@ class FeatureExtractor:
                  feature_list: list,
                  skip_structures: list,
                  output_path: list,
+                 rename = True
                  ):
 
         # Initializing properties of FeatureExtractor object
@@ -49,6 +50,7 @@ class FeatureExtractor:
         self.feature_list = feature_list
         self.skip_structures = skip_structures
         self.output_path = output_path
+        self.rename = rename
 
         # If outputting excel files, create a tmp directory
         self.intermediate_output_path = self.output_path[0]
@@ -81,16 +83,19 @@ class FeatureExtractor:
         self.sub_comp_names = [i['name'] for i in self.sub_seg_params]
 
         # Names key to fix output annotation names
-        self.names_key = {
-            'non_globally_sclerotic_glomeruli':'Glomeruli',
-            'globally_sclerotic_glomeruli':'Sclerotic Glomeruli',
-            'arteries/arterioles':'Arteries and Arterioles',
-            'non_globally_sclerotic_glomeruli_manual':'Glomeruli',
-            'globally_sclerotic_glomeruli_manual':'Sclerotic Glomeruli',
-            'arteries/arterioles_manual':'Arteries and Arterioles',
-            'tubules_manual':'Tubules',
-            'gloms':'Glomeruli'
-        }
+        if self.rename:
+            self.names_key = {
+                'non_globally_sclerotic_glomeruli':'Glomeruli',
+                'globally_sclerotic_glomeruli':'Sclerotic Glomeruli',
+                'arteries/arterioles':'Arteries and Arterioles',
+                'non_globally_sclerotic_glomeruli_manual':'Glomeruli',
+                'globally_sclerotic_glomeruli_manual':'Sclerotic Glomeruli',
+                'arteries/arterioles_manual':'Arteries and Arterioles',
+                'tubules_manual':'Tubules',
+                'gloms':'Glomeruli'
+            }
+        else:
+            self.names_key = {}
 
         # Getting annotations
         self.annotations = self.gc.get(f'annotation/item/{self.slide_item_id}')

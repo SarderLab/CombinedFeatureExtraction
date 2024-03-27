@@ -106,6 +106,13 @@
       <default>""</default>
     </string>
     <boolean>
+      <name>rename</name>
+      <longflag>re_name</longflag>
+      <label>Rename structures</label>
+      <description>Whether or not to rename structures to nicer names</description>
+      <default>1</default>
+    </boolean>
+    <boolean>
       <name>returnXlsx</name>
       <longflag>return_xlsx</longflag>
       <label>Return Excel File(s)</label>
