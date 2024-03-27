@@ -20,6 +20,7 @@ from skimage.feature import peak_local_max
 from skimage import exposure
 
 from PIL import Image, UnidentifiedImageError
+Image.MAX_IMAGE_PIXELS = None
 import requests
 from io import BytesIO
 from skimage.draw import polygon
@@ -347,7 +348,7 @@ class FeatureExtractor:
                 feature_values[f"Mean Distance Transform {self.sub_comp_names[sc]}"] = 0
 
             # Max Distance Transform By Object Area
-            if not np.isnan(max_distance):
+            if not np.isnan(max_distance) and object_area>0:
                 max_distance_by_object_area = max_distance / object_area
             else:
                 max_distance_by_object_area = 0
@@ -378,12 +379,12 @@ class FeatureExtractor:
 
             if len(compartment_pixels) > 0:
                 # Mean Color
-                mean_color = np.mean(compartment_pixels, axis=0)
+                mean_color = np.nanmean(compartment_pixels, axis=0)
                 for i, channel_value in enumerate(mean_color):
                     feature_values[f"Mean {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = channel_value
 
                 # Standard Deviation Color
-                std_dev_color = np.std(compartment_pixels, axis=0)
+                std_dev_color = np.nanstd(compartment_pixels, axis=0)
                 for i, channel_value in enumerate(std_dev_color):
                     feature_values[f"Standard Deviation {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = channel_value
             else:
@@ -424,7 +425,11 @@ class FeatureExtractor:
         object_area = np.sum(subcompartment_mask)
         for sc in range(len(self.sub_comp_names)):  # As there are 3 compartments
             subcompartment_area = np.sum(subcompartment_mask[:,:,sc])
-            feature_values[f"{self.sub_comp_names[sc]} Area By Object Area"] = subcompartment_area / object_area
+            if object_area>0:
+                feature_values[f"{self.sub_comp_names[sc]} Area By Object Area"] = subcompartment_area / object_area
+            else:
+                feature_values[f"{self.sub_comp_names[sc]} Area By Object Area"] = 0.0
+
             feature_values[f"{self.sub_comp_names[sc]} Area"] = subcompartment_area
 
         # Calculate Nuclei Number
@@ -434,7 +439,7 @@ class FeatureExtractor:
         # Calculate Mean Aspect Ratio and Standard Deviation Aspect Ratio for the nuclei compartment
         nuclei_label = label(subcompartment_mask[:,:,self.sub_comp_names.index('Nuclei')])
         nuclei_props = regionprops(nuclei_label)
-        aspect_ratios = [i.axis_major_length / i.axis_minor_length for i in nuclei_props]
+        aspect_ratios = [i.axis_major_length / i.axis_minor_length if i.axis_minor_length>0 else 0 for i in nuclei_props]
 
         if not np.isnan(np.nanmean(aspect_ratios)):
             feature_values[f"Mean Aspect Ratio Nuclei"] = np.nanmean(aspect_ratios)
