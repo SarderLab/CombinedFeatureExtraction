@@ -201,7 +201,6 @@ class FeatureExtractor:
 
             # Posting updated annotations to slide
             self.post_annotations()
-
             # Adding output excel files if present
             if not self.output_path is None:
                 print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
