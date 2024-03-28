@@ -22,7 +22,9 @@ def main(args):
 
     # Finding the id for the current WSI (input_image)
     file_id = args.input_image
-    file_info = gc.get(f'/item/{file_id}')
+    file_info = gc.get(f'/file/{file_id}')
+    item_id = file_info['itemId']
+
     file_name = file_info['name']
     print(f'Running on: {file_name}')
 
@@ -86,7 +88,7 @@ def main(args):
     # Defining feature extractor object which should take care of the rest
     FeatureExtractor(
         gc = gc,
-        slide_item_id = file_id,
+        slide_item_id = item_id,
         sub_seg_params=sub_seg_params,
         feature_list = feature_list,
         skip_structures = skip_structures,
