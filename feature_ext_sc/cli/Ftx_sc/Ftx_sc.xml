@@ -113,7 +113,7 @@
       <default>0</default>
     </boolean>
     <boolean>
-      <name>testRun</name>
+      <name>test_run</name>
       <longflag>test_run</longflag>
       <label>Test Run</label>
       <description>Select this option to randomly select one structure from the slide. Returns example sub-compartment extraction as a file in the current image as well as features for that structure</description>

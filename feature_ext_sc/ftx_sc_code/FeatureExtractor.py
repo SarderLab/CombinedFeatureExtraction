@@ -165,7 +165,7 @@ class FeatureExtractor:
                             agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = {}
                             if not self.output_path is None:
                                 # Outputting compartment features to excel file (one sheet per feature category)
-                                output_file = self.output_path+'/'+f'{ann["annotation"]["name"]}_Features.xlsx'
+                                output_file = self.output_path+'/'+f'{ann["annotation"]["name"].replace("/","")}_Features.xlsx'
                                 output_filenames.append(output_file)
 
                                 with pd.ExcelWriter(output_file,mode='w',engine='openpyxl') as writer:
