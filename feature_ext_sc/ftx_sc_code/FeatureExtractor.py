@@ -105,7 +105,7 @@ class FeatureExtractor:
         if not self.test_run:
             agg_feat_metadata = {}
             # Iterating through annotations and extracting features
-            for a_idx, ann in tqdm(enumerate(self.annotations)):
+            for a_idx, ann in tqdm(enumerate(self.annotations),total = len(self.annotations)):
                 if 'annotation' in ann:
                     if not 'interstitium' in ann['annotation']['name']:
                         
@@ -123,7 +123,7 @@ class FeatureExtractor:
 
                         # Iterating through elements in annotation
                         compartment_ids = []
-                        for c_idx,comp in tqdm(enumerate(ann['annotation']['elements'])):
+                        for c_idx,comp in tqdm(enumerate(ann['annotation']['elements']),total = len(ann['annotation']['elements'])):
                             
                             # Extract image, mask, and sub-compartment mask
                             try:
