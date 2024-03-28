@@ -75,7 +75,7 @@ def main(args):
     # Output path for excel files (if specified)
     if args.returnXlsx:
         if 'output_path' in vars(args):
-            output_path = output_path
+            output_path = args.output_path
         else:
             output_path = '/tmp/'
     else:
@@ -98,28 +98,30 @@ def main(args):
 
 if __name__ == "__main__":
 
-    """
+    
     # If running this locally, just enter the output_path manually.
     # output_path is not included in the available args specified in Ftx_sc.xml
+    """
     class args_object:
         def __init__(self):
             self.girderApiUrl = "http://ec2-3-230-122-132.compute-1.amazonaws.com:8080/api/v1/"
             self.girderToken = ""
 
-            self.basedir = ""
             self.input_image = ""
 
-            self.threshold_nuclei = ""
-            self.threshold_PAS = ""
-            self.threshold_LS = ""
-            self.minsize_LS = ""
-            self.minsize_nuclei = ""
-            self.minsize_PAS = ""
+            self.threshold_nuclei = 200
+            self.threshold_PAS = 60
+            self.threshold_LS = 0
+            self.minsize_LS = 0
+            self.minsize_nuclei = 50
+            self.minsize_PAS = 20
 
             self.featureCats = "Distance Transform Features,Color Features,Texture Features,Morphological Features"
             self.ignoreAnns = ""
-            self.returnXlsx = False
-            self.outputPath = ""
+            self.returnXlsx = True
+            self.output_path = ""
+            self.rename = True
+            self.test_run = True
 
 
     args = args_object()

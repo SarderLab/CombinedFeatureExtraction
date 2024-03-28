@@ -118,6 +118,6 @@
       <label>Test Run</label>
       <description>Select this option to randomly select one structure from the slide. Returns example sub-compartment extraction as a file in the current image as well as features for that structure</description>
       <default>0</default>
-    <boolean>
+    </boolean>
   </parameters>
 </executable>

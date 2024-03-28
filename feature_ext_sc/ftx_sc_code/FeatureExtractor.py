@@ -211,15 +211,16 @@ class FeatureExtractor:
         else:
 
             # Randomly select a structure from all the annotations and run feature extraction just for that one.
+            all_ann_names = [i['annotation']['name'] for i in self.annotations]
             if isinstance(self.annotations,list):
                 ann_names = [i['annotation']['name'] for i in self.annotations if len(i['annotation']['elements'])>0]
             elif isinstance(self.annotations, dict):
                 ann_names = [self.annotations['name']]
             
             chosen_ann = random.choice(ann_names)
-            chosen_structure = np.random.randint(low=0,high = len(self.annotations[ann_names.index(chosen_ann)]['annotation']['elements']))
+            chosen_structure = np.random.randint(low=0,high = len(self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements']))
 
-            comp = self.annotations[ann_names.index(chosen_ann)]['annotation']['elements'][chosen_structure]
+            comp = self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements'][chosen_structure]
             # Extract image, mask, and sub-compartment mask
             try:
                 image, mask = self.grab_image_and_mask(comp['points'])
@@ -233,17 +234,12 @@ class FeatureExtractor:
             if np.sum(np.sum(sub_compartment_mask,axis=-1))>0:
                 test_features = {}
 
-                compartment_ids.append(ann['annotation']['name']+f'_{c_idx}')
-
                 # Iterating through feature extraction function handles
                 for feat in self.feature_extract_list:
                     try:
                         cat_feat = self.feature_extract_list[feat](image,sub_compartment_mask)
                     except:
                         cat_feat = self.feature_extract_list[feat](sub_compartment_mask)
-
-                    # Adding extracted category of features to compartment_feature_dict
-                    compartment_feature_dict[feat].append(cat_feat)
 
                     # Adding extracted category of features to element user metadata
                     for c_f in cat_feat:
@@ -253,15 +249,22 @@ class FeatureExtractor:
                 print(f'np.sum(np.sum(sub_compartment_mask,axis=-1)) = :{np.sum(np.sum(sub_compartment_mask,axis=-1))}')
 
             # Saving test sample info.
-            combined_image_mask_sub = np.concatenate((image,np.uint8(255*mask),np.uint8(255*sub_compartment_mask)),axis=1)
-            Image.fromarray(combined_image_mask_sub).save(f'/{chosen_ann}_{chosen_structure}_image.png')
-            with open(f'/{chosen_ann}_{chosen_structure}_features.json','w') as f:
+            combined_image_mask_sub = np.concatenate((image,np.uint8(255*np.repeat(mask[:,:,None],repeats=3,axis=-1)),np.uint8(255*sub_compartment_mask)),axis=1)
+            if self.output_path is None:
+                image_path = f"/{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
+                feature_path = f"/{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
+            else:
+                image_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
+                feature_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
+
+            Image.fromarray(combined_image_mask_sub).save(image_path)
+            with open(feature_path,'w') as f:
                 json.dump(test_features,f)
                 f.close()
 
             # Uploading to item
-            self.gc.uploadFileToItem(self.slide_item_id,f'/{chosen_ann}_{chosen_structure}_image.png',reference=None,mimeType=None,filename=None,progressCallback=None)
-            self.gc.uploadFileToItem(self.slide_item_id,f'/{chosen_ann}_{chosen_structure}_features.json',reference=None,mimeType=None,filename=None,progressCallback=None)
+            self.gc.uploadFileToItem(self.slide_item_id,image_path,reference=None,mimeType=None,filename=None,progressCallback=None)
+            self.gc.uploadFileToItem(self.slide_item_id,feature_path,reference=None,mimeType=None,filename=None,progressCallback=None)
 
             print('Done with test run!')
             print('Look in the "Files" section of the image you ran this on to see the test outputs')
@@ -313,8 +316,8 @@ class FeatureExtractor:
         # Iterating through sub-compartment parameters
         for idx, param in enumerate(self.sub_seg_params):
 
-            remainder_mask = np.multiply(hsv_image,remainder_mask)
-            masked_remaining_pixels = np.multiply(remainder_mask,mask)
+            remaining_pixels = np.multiply(hsv_image,remainder_mask)
+            masked_remaining_pixels = np.multiply(remaining_pixels,mask)
 
             # Applying manually set threshold
             masked_remaining_pixels[masked_remaining_pixels<=param['threshold']] = 0
@@ -341,7 +344,7 @@ class FeatureExtractor:
             else:
 
                 # Filtering by minimum size
-                small_object_filtered = (1/255)*np.uint8(remove_small_objects(masked_remaining_pixels>0,param['min_size']))
+                small_object_filtered = remove_small_objects(masked_remaining_pixels>0,param['min_size'])
                 sub_mask = small_object_filtered
 
             sub_comp_image[sub_mask>0,idx] = 1
