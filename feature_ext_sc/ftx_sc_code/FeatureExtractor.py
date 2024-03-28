@@ -28,6 +28,7 @@ import pandas as pd
 import json
 from tqdm import tqdm
 import os
+import random
 
 import shutil
 
@@ -38,8 +39,9 @@ class FeatureExtractor:
                  sub_seg_params: list,
                  feature_list: list,
                  skip_structures: list,
-                 output_path: list,
-                 rename = True
+                 rename: bool,
+                 test_run: bool,
+                 output_path = None
                  ):
 
         # Initializing properties of FeatureExtractor object
@@ -51,11 +53,11 @@ class FeatureExtractor:
         self.skip_structures = skip_structures
         self.output_path = output_path
         self.rename = rename
+        self.test_run = test_run
 
         # If outputting excel files, create a tmp directory
-        self.intermediate_output_path = self.output_path[0]
-        if not self.intermediate_output_path is None:
-            os.makedirs(self.intermediate_output_path,exist_ok=True)
+        if not self.output_path is None:
+            os.makedirs(self.output_path,exist_ok=True)
             output_filenames = []
 
         # Making feature extract list
@@ -100,112 +102,173 @@ class FeatureExtractor:
         # Getting annotations
         self.annotations = self.gc.get(f'annotation/item/{self.slide_item_id}')
         
-        agg_feat_metadata = {}
-        # Iterating through annotations and extracting features
-        for a_idx, ann in tqdm(enumerate(self.annotations)):
-            if 'annotation' in ann:
-                if not 'interstitium' in ann['annotation']['name']:
-                    
-                    # Checking for skip annotations
-                    if ann['annotation']['name'] in self.skip_structures:
-                        print(f'Skipping {ann["annotation"]["name"]}')
-                        continue
-
-                    # Replacing names if present in names key
-                    if ann['annotation']['name'] in list(self.names_key.keys()):
-                        ann['annotation']['name'] = self.names_key[ann['annotation']['name']]
-
-                    # Initialize annotation/compartment dictionary, keys for each feature category specified in self.feature_list
-                    compartment_feature_dict = {i:[] for i in self.feature_list}
-
-                    # Iterating through elements in annotation
-                    compartment_ids = []
-                    for c_idx,comp in tqdm(enumerate(ann['annotation']['elements'])):
+        if not self.test_run:
+            agg_feat_metadata = {}
+            # Iterating through annotations and extracting features
+            for a_idx, ann in tqdm(enumerate(self.annotations)):
+                if 'annotation' in ann:
+                    if not 'interstitium' in ann['annotation']['name']:
                         
-                        # Extract image, mask, and sub-compartment mask
-                        try:
-                            image, mask = self.grab_image_and_mask(comp['points'])
-                            sub_compartment_mask = self.sub_segment_image(image, mask)
-                        except UnidentifiedImageError:
-                            # I believe this error occurs when the number of unique points is less than 3
-                            print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
-                            print(comp['points'])
+                        # Checking for skip annotations
+                        if ann['annotation']['name'] in self.skip_structures:
+                            print(f'Skipping {ann["annotation"]["name"]}')
                             continue
 
-                        # Gettining rid of structures with areas less than the minimum size for each subcompartment
-                        if np.sum(np.sum(sub_compartment_mask,axis=-1))>0:
-                            if 'user' not in comp:
-                                comp['user'] = {}
+                        # Replacing names if present in names key
+                        if ann['annotation']['name'] in list(self.names_key.keys()):
+                            ann['annotation']['name'] = self.names_key[ann['annotation']['name']]
 
-                            compartment_ids.append(ann['annotation']['name']+f'_{c_idx}')
+                        # Initialize annotation/compartment dictionary, keys for each feature category specified in self.feature_list
+                        compartment_feature_dict = {i:[] for i in self.feature_list}
 
-                            # Iterating through feature extraction function handles
-                            for feat in self.feature_extract_list:
-                                try:
-                                    cat_feat = self.feature_extract_list[feat](image,sub_compartment_mask)
-                                except:
-                                    cat_feat = self.feature_extract_list[feat](sub_compartment_mask)
+                        # Iterating through elements in annotation
+                        compartment_ids = []
+                        for c_idx,comp in tqdm(enumerate(ann['annotation']['elements'])):
+                            
+                            # Extract image, mask, and sub-compartment mask
+                            try:
+                                image, mask = self.grab_image_and_mask(comp['points'])
+                                sub_compartment_mask = self.sub_segment_image(image, mask)
+                            except UnidentifiedImageError:
+                                # I believe this error occurs when the number of unique points is less than 3
+                                print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
+                                print(comp['points'])
+                                continue
 
-                                # Adding extracted category of features to compartment_feature_dict
-                                compartment_feature_dict[feat].append(cat_feat)
+                            # Gettining rid of structures with areas less than the minimum size for each subcompartment
+                            if np.sum(np.sum(sub_compartment_mask,axis=-1))>0:
+                                if 'user' not in comp:
+                                    comp['user'] = {}
 
-                                # Adding extracted category of features to element user metadata
-                                for c_f in cat_feat:
-                                    comp['user'][c_f] = np.float64(cat_feat[c_f])
-                                
-                                self.annotations[a_idx]['annotation']['elements'][c_idx] = comp
-                        else:
-                            continue
+                                compartment_ids.append(ann['annotation']['name']+f'_{c_idx}')
 
-                    if len(compartment_ids)>0:
+                                # Iterating through feature extraction function handles
+                                for feat in self.feature_extract_list:
+                                    try:
+                                        cat_feat = self.feature_extract_list[feat](image,sub_compartment_mask)
+                                    except:
+                                        cat_feat = self.feature_extract_list[feat](sub_compartment_mask)
 
-                        agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = {}
-                        if not self.output_path[0] is None:
-                            # Outputting compartment features to excel file (one sheet per feature category)
-                            output_file = self.output_path[0]+'/'+f'{ann["annotation"]["name"]}_Features.xlsx'
-                            output_filenames.append(output_file)
+                                    # Adding extracted category of features to compartment_feature_dict
+                                    compartment_feature_dict[feat].append(cat_feat)
 
-                            with pd.ExcelWriter(output_file,mode='w',engine='openpyxl') as writer:
+                                    # Adding extracted category of features to element user metadata
+                                    for c_f in cat_feat:
+                                        comp['user'][c_f] = np.float64(cat_feat[c_f])
+                                    
+                                    self.annotations[a_idx]['annotation']['elements'][c_idx] = comp
+                            else:
+                                continue
+
+                        if len(compartment_ids)>0:
+
+                            agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = {}
+                            if not self.output_path is None:
+                                # Outputting compartment features to excel file (one sheet per feature category)
+                                output_file = self.output_path+'/'+f'{ann["annotation"]["name"]}_Features.xlsx'
+                                output_filenames.append(output_file)
+
+                                with pd.ExcelWriter(output_file,mode='w',engine='openpyxl') as writer:
+                                    for feat_cat in compartment_feature_dict:
+
+                                        feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
+                                        feat_df['compartment_ids'] = compartment_ids
+
+                                        # Writing sheet in excel file
+                                        feat_df.to_excel(writer,sheet_name = feat_cat)
+
+                                        # Aggregating features
+                                        if not feat_df.empty:
+                                            agg_feat_df = self.aggregate_features(feat_df)
+                                            for a_f in agg_feat_df:
+                                                agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'][a_f] = agg_feat_df[a_f]
+                            
+                            else:
                                 for feat_cat in compartment_feature_dict:
-
                                     feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
                                     feat_df['compartment_ids'] = compartment_ids
 
-                                    # Writing sheet in excel file
-                                    feat_df.to_excel(writer,sheet_name = feat_cat)
-
-                                    # Aggregating features
+                                    # Aggregating features 
                                     if not feat_df.empty:
                                         agg_feat_df = self.aggregate_features(feat_df)
                                         for a_f in agg_feat_df:
                                             agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'][a_f] = agg_feat_df[a_f]
-                        
                         else:
-                            for feat_cat in compartment_feature_dict:
-                                feat_df = pd.DataFrame.from_records(compartment_feature_dict[feat_cat])
-                                feat_df['compartment_ids'] = compartment_ids
+                            continue
+            
+            # Putting metadata
+            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
 
-                                # Aggregating features 
-                                if not feat_df.empty:
-                                    agg_feat_df = self.aggregate_features(feat_df)
-                                    for a_f in agg_feat_df:
-                                        agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'][a_f] = agg_feat_df[a_f]
-                    else:
-                        continue
-        
-        # Putting metadata
-        self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
+            # Posting updated annotations to slide
+            self.post_annotations()
 
-        # Posting updated annotations to slide
-        self.post_annotations()
+            # Adding output excel files if present
+            if not self.output_path is None:
+                print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
+                for path in output_filenames:
+                    self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
 
-        # Adding output excel files if present
-        if not self.output_path[0] is None:
-            print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
-            for path in output_filenames:
-                self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
+        else:
 
-            shutil.rmtree(self.output_path[0])
+            # Randomly select a structure from all the annotations and run feature extraction just for that one.
+            if isinstance(self.annotations,list):
+                ann_names = [i['annotation']['name'] for i in self.annotations if len(i['annotation']['elements'])>0]
+            elif isinstance(self.annotations, dict):
+                ann_names = [self.annotations['name']]
+            
+            chosen_ann = random.choice(ann_names)
+            chosen_structure = np.random.randint(low=0,high = len(self.annotations[ann_names.index(chosen_ann)]['annotation']['elements']))
+
+            comp = self.annotations[ann_names.index(chosen_ann)]['annotation']['elements'][chosen_structure]
+            # Extract image, mask, and sub-compartment mask
+            try:
+                image, mask = self.grab_image_and_mask(comp['points'])
+                sub_compartment_mask = self.sub_segment_image(image, mask)
+            except UnidentifiedImageError:
+                # I believe this error occurs when the number of unique points is less than 3
+                print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
+                print(comp['points'])
+
+            # Gettining rid of structures with areas less than the minimum size for each subcompartment
+            if np.sum(np.sum(sub_compartment_mask,axis=-1))>0:
+                test_features = {}
+
+                compartment_ids.append(ann['annotation']['name']+f'_{c_idx}')
+
+                # Iterating through feature extraction function handles
+                for feat in self.feature_extract_list:
+                    try:
+                        cat_feat = self.feature_extract_list[feat](image,sub_compartment_mask)
+                    except:
+                        cat_feat = self.feature_extract_list[feat](sub_compartment_mask)
+
+                    # Adding extracted category of features to compartment_feature_dict
+                    compartment_feature_dict[feat].append(cat_feat)
+
+                    # Adding extracted category of features to element user metadata
+                    for c_f in cat_feat:
+                        test_features[c_f] = np.float64(cat_feat[c_f])
+            else:
+                print('Doh! These sub-compartments are wack!')
+                print(f'np.sum(np.sum(sub_compartment_mask,axis=-1)) = :{np.sum(np.sum(sub_compartment_mask,axis=-1))}')
+
+            # Saving test sample info.
+            combined_image_mask_sub = np.concatenate((image,np.uint8(255*mask),np.uint8(255*sub_compartment_mask)),axis=1)
+            Image.fromarray(combined_image_mask_sub).save(f'/{chosen_ann}_{chosen_structure}_image.png')
+            with open(f'/{chosen_ann}_{chosen_structure}_features.json','w') as f:
+                json.dump(test_features,f)
+                f.close()
+
+            # Uploading to item
+            self.gc.uploadFileToItem(self.slide_item_id,f'/{chosen_ann}_{chosen_structure}_image.png',reference=None,mimeType=None,filename=None,progressCallback=None)
+            self.gc.uploadFileToItem(self.slide_item_id,f'/{chosen_ann}_{chosen_structure}_features.json',reference=None,mimeType=None,filename=None,progressCallback=None)
+
+            print('Done with test run!')
+            print('Look in the "Files" section of the image you ran this on to see the test outputs')
+            print('-------------------------------------------')
+            print(f'/{chosen_ann}_{chosen_structure}_image.png')
+            print(f'/{chosen_ann}_{chosen_structure}_features.json')
+
 
     def grab_image_and_mask(self,coordinates):
 
@@ -520,9 +583,9 @@ class FeatureExtractor:
         # Updating with new annotations
         for ann in self.annotations:
             try:
-                json_string = json.dumps(self.annotations[ann])
+                json_string = json.dumps(ann)
 
-                self.gc.delete(f'annotation/{self.annotations[ann]["_id"]}?token={self.user_token}')
+                self.gc.delete(f'annotation/{ann["_id"]}?token={self.user_token}')
                 self.gc.post(f'/annotation/item/{self.slide_item_id}?token={self.user_token}',
                     data = json_string,
                     headers={
@@ -532,4 +595,4 @@ class FeatureExtractor:
                     )
             
             except json.decoder.JSONDecodeError as error:
-                print(f'Error occurred on {ann}')
+                print(f'Error occurred on {ann["name"]}')

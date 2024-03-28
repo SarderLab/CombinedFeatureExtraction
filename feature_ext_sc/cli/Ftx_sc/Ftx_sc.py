@@ -9,17 +9,9 @@ import girder_client
 
 def main(args):  
     
-    """
-    cmd = "python3 ../ftx_sc_code/FeatureExtractor.py   --basedir '{}' --girderApiUrl '{}' --girderToken '{}' \
-             --input_image '{}' --threshold_nuclei {} --minsize_nuclei {} --threshold_PAS {} --minsize_PAS {} --threshold_LAS {} --minsize_LAS {} \
-                ".format(args.basedir, args.girderApiUrl, args.girderToken, args.input_image, args.threshold_nuclei, args.minsize_nuclei, args.threshold_PAS, args.minsize_PAS, args.threshold_LAS, args.minsize_LAS)
-    """
-    #print(cmd)
     sys.stdout.flush()
-    #os.system(cmd)  
 
     # Arguments: 
-    # basedir = parent folder of the image for feature extraction
     # girderApiUrl = URL used for girder WebAPI calls
     # input_image = girder item id for current whole slide image
     # threshold_nuclei, minsize_nuclei, threshold_PAS, minsize_PAS, threshold_LS, minsize_LS = subcompartment segmentation parameters
@@ -28,19 +20,15 @@ def main(args):
     gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
     gc.setToken(args.girderToken)
 
-    # Accessing item id for the image
-    basedir = args.basedir
-    _ = os.system("printf 'Base Directory supplied: {}\n'".format(basedir))
-    folder_id = basedir.split(os.sep)[-2]
-
     # Finding the id for the current WSI (input_image)
-    file_name = args.input_image.split(os.sep)[-1]
-    _ = os.system("printf 'Input Image supplied: {}\n'".format(file_name))
+    file_id = args.input_image
+    file_info = gc.get(f'/item/{file_id}')
+    file_name = file_info['name']
+    print(f'Running on: {file_name}')
 
-    all_files = list(gc.listItem(folder_id))
-    all_file_names = [i['name'] for i in all_files]
-    file_id = all_files[all_file_names.index(file_name)]['_id']
-    _ = os.system("printf 'Found image: {} with id: {}'".format(file_name,file_id))
+    folder_id = file_info['folderId']
+    folder_info = gc.get(f'/folder/{folder_id}')    
+    print(f'{file_name} is in {folder_info["name"]}')
 
     # Converting sub-compartment segmentation parameters to correct format
     thresh_nuc = int(args.threshold_nuclei)
@@ -86,9 +74,14 @@ def main(args):
 
     # Output path for excel files (if specified)
     if args.returnXlsx:
-        output_path = [basedir+'/tmp', args.outputPath]
+        if 'output_path' in vars(args):
+            output_path = output_path
+        else:
+            output_path = '/tmp/'
     else:
-        output_path = [None]
+        output_path = None
+
+    # Added parameter "test_run". Selecting this runs feature extraction and sub-compartment determination for a single randomly selected structure.
 
     # Defining feature extractor object which should take care of the rest
     FeatureExtractor(
@@ -97,14 +90,17 @@ def main(args):
         sub_seg_params=sub_seg_params,
         feature_list = feature_list,
         skip_structures = skip_structures,
+        rename = rename,
+        test_run = args.test_run,
         output_path = output_path
-        rename = rename
     )
 
 
 if __name__ == "__main__":
 
     """
+    # If running this locally, just enter the output_path manually.
+    # output_path is not included in the available args specified in Ftx_sc.xml
     class args_object:
         def __init__(self):
             self.girderApiUrl = "http://ec2-3-230-122-132.compute-1.amazonaws.com:8080/api/v1/"
@@ -129,4 +125,5 @@ if __name__ == "__main__":
     args = args_object()
     main(args)
     """
+    # Comment this line out if running locally
     main(CLIArgumentParser().parse_args())

@@ -11,20 +11,13 @@
   <parameters>
     <label>IO</label>
     <description>Input/output parameters.</description>
-    <image>
+    <image reference="_girder_id_">
       <name>input_image</name>
       <label>Input Image</label>
       <description>Input Filename </description>
       <channel>input</channel>
       <index>0</index>
     </image>
-    <directory>
-      <name>basedir</name>
-      <label>Base Directory</label>
-      <description>Parent folder or collection for the current image</description>
-      <channel>input</channel>
-      <index>1</index>
-    </directory>
     <integer>
       <name>threshold_nuclei</name>
       <label>Threshold for Nuclei</label>
@@ -119,12 +112,12 @@
       <description>Whether or not to output excel files containing morphometric features (must also specify path)</description>
       <default>0</default>
     </boolean>
-    <directory>
-      <name>outputPath</name>
-      <longflag>output_path</longflag>
-      <label>Excel File(s) Output Path</label>
-      <description>Base path where morphometric files are saved to (if specified in previous parameter)</description>
-      <default></default>
-    </directory>
+    <boolean>
+      <name>testRun</name>
+      <longflag>test_run</longflag>
+      <label>Test Run</label>
+      <description>Select this option to randomly select one structure from the slide. Returns example sub-compartment extraction as a file in the current image as well as features for that structure</description>
+      <default>0</default>
+    <boolean>
   </parameters>
 </executable>
