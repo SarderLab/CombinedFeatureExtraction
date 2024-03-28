@@ -25,10 +25,12 @@ def main(args):
     file_info = gc.get(f'/file/{file_id}')
     item_id = file_info['itemId']
 
+    item_info = gc.get(f'/item/{item_id}')
+
     file_name = file_info['name']
     print(f'Running on: {file_name}')
 
-    folder_id = file_info['folderId']
+    folder_id = item_info['folderId']
     folder_info = gc.get(f'/folder/{folder_id}')    
     print(f'{file_name} is in {folder_info["name"]}')
 
