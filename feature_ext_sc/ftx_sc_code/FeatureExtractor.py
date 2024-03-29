@@ -388,7 +388,7 @@ class FeatureExtractor:
             feature_values[f"Sum Distance Transform By Object Area {self.sub_comp_names[sc]}"] = sum_distance_by_object_area
 
             # Sum Distance Transform By Sub-compartment Area
-            if sub_compartment_area>0:
+            if not np.isnan(sum_distance) and sub_compartment_area>0:
                 sum_distance_by_subcompartment_area = sum_distance / sub_compartment_area
             else:
                 sum_distance_by_subcompartment_area = 0
@@ -457,12 +457,20 @@ class FeatureExtractor:
                 # Mean Color
                 mean_color = np.nanmean(compartment_pixels, axis=0)
                 for i, channel_value in enumerate(mean_color):
-                    feature_values[f"Mean {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = channel_value
+                    if not np.isnan(channel_value):
+                        feature_values[f"Mean {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = channel_value
+                    else:
+                        feature_values[f"Mean {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = 0.0
+
 
                 # Standard Deviation Color
                 std_dev_color = np.nanstd(compartment_pixels, axis=0)
                 for i, channel_value in enumerate(std_dev_color):
-                    feature_values[f"Standard Deviation {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = channel_value
+                    if not np.isnan(channel_value):
+                        feature_values[f"Standard Deviation {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = channel_value
+                    else:
+                        feature_values[f"Standard Deviation {['Red', 'Green', 'Blue'][i]} {self.sub_comp_names[sc]}"] = 0.0
+
             else:
                 # If compartment has no pixels, set values to zero
                 for i in range(len(self.sub_comp_names)):
@@ -485,7 +493,10 @@ class FeatureExtractor:
 
             for i, texture_name in enumerate(texture_feature_names):
                 texture_feature_value = graycoprops(texture_matrix, texture_name.lower())
-                feature_values[f"{texture_name} {self.sub_comp_names[sc]}"] = texture_feature_value[0][0]
+                if not np.isnan(texture_feature_value[0][0]):
+                    feature_values[f"{texture_name} {self.sub_comp_names[sc]}"] = texture_feature_value[0][0]
+                else:
+                    feature_values[f"{texture_name} {self.sub_comp_names[sc]}"] = 0.0
 
         return feature_values
 
@@ -613,6 +624,3 @@ class FeatureExtractor:
 
 
 
-
-
-                
