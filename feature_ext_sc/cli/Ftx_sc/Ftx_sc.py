@@ -50,7 +50,7 @@ def main(args):
             'min_size': minsize_nuc
         },
         {
-            'name':'PAS',
+            'name':'Eosinophilic',
             'threshold': thresh_pas,
             'min_size': minsize_pas
         },
@@ -96,7 +96,8 @@ def main(args):
         skip_structures = skip_structures,
         rename = rename,
         test_run = args.test_run,
-        output_path = output_path
+        output_path = output_path,
+        replace_annotations = args.replace_annotations
     )
 
 
@@ -125,7 +126,8 @@ if __name__ == "__main__":
             self.returnXlsx = True
             self.output_path = ""
             self.rename = True
-            self.test_run = True
+            self.test_run = True,
+            self.replace_annotations = True
 
 
     args = args_object()

@@ -19,6 +19,8 @@ from scipy import ndimage as ndi
 from skimage.feature import peak_local_max
 from skimage import exposure
 
+import girder_client
+
 from PIL import Image, UnidentifiedImageError
 Image.MAX_IMAGE_PIXELS = None
 import requests
@@ -41,7 +43,8 @@ class FeatureExtractor:
                  skip_structures: list,
                  rename: bool,
                  test_run: bool,
-                 output_path = None
+                 output_path = None,
+                 replace_annotations = True
                  ):
 
         # Initializing properties of FeatureExtractor object
@@ -54,6 +57,7 @@ class FeatureExtractor:
         self.output_path = output_path
         self.rename = rename
         self.test_run = test_run
+        self.replace_annotations = replace_annotations
 
         # If outputting excel files, create a tmp directory
         if not self.output_path is None:
@@ -200,7 +204,9 @@ class FeatureExtractor:
             self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
 
             # Posting updated annotations to slide
-            self.post_annotations()
+            if self.replace_annotations:
+                self.post_annotations()
+
             # Adding output excel files if present
             if not self.output_path is None:
                 print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
@@ -587,7 +593,8 @@ class FeatureExtractor:
             try:
                 json_string = json.dumps(ann)
 
-                self.gc.delete(f'annotation/{ann["_id"]}?token={self.user_token}')
+                self.gc.delete(f'/annotation/{ann["_id"]}?token={self.user_token}')
+
                 self.gc.post(f'/annotation/item/{self.slide_item_id}?token={self.user_token}',
                     data = json_string,
                     headers={
@@ -596,5 +603,16 @@ class FeatureExtractor:
                         }
                     )
             
-            except json.decoder.JSONDecodeError as error:
+            except (json.decoder.JSONDecodeError, girder_client.HttpError) as error:
                 print(f'Error occurred on {ann["name"]}')
+
+
+
+
+
+
+
+
+
+
+                
