@@ -59,6 +59,9 @@ class FeatureExtractor:
         self.test_run = test_run
         self.replace_annotations = replace_annotations
 
+        # Getting image information:
+        self.image_info = self.gc.get(f'/item/{self.slide_item_id}/tiles')
+
         # If outputting excel files, create a tmp directory
         if not self.output_path is None:
             os.makedirs(self.output_path,exist_ok=True)
@@ -289,7 +292,38 @@ class FeatureExtractor:
         max_y = int(np.max(coordinates[:,1]))
 
         # Getting image from bbox region
-        image = np.uint8(np.array(Image.open(BytesIO(requests.get(self.gc.urlBase+f'/item/{self.slide_item_id}/tiles/region?token={self.user_token}&left={min_x}&top={min_y}&right={max_x}&bottom={max_y}').content))))
+        if not 'frames' in self.image_info:
+            image = np.uint8(
+                np.array(
+                    Image.open(
+                        BytesIO(
+                            requests.get(
+                                self.gc.urlBase+f'/item/{self.slide_item_id}/tiles/region?token={self.user_token}&left={min_x}&top={min_y}&right={max_x}&bottom={max_y}'
+                            ).content
+                        )
+                    )
+                )
+            )
+        else:
+            # For multi-frame images:
+            height = int(max_y - min_y)
+            width = int(max_x - min_x)
+            image = np.zeros((height, width, 3),dtype = np.uint8)
+
+            for i in range(len(self.image_info['frames'])):
+                image_frame = np.uint8(
+                    np.array(
+                        Image.open(
+                            BytesIO(
+                                requests.get(
+                                    self.gc.urlBase+f'/item/{self.slide_item_id}/tiles/region?token={self.user_token}&left={min_x}&top={min_y}&right={max_x}&bottom={max_y}&frame={i}'
+                                ).content
+                            )
+                        )
+                    )
+                )
+
+                image[:,:,i] += np.squeeze(image_frame)
 
         scaled_coordinates = coordinates.tolist()
         scaled_coordinates = [[int(i[0]-min_x), int(i[1]-min_y)] for i in scaled_coordinates]
