@@ -345,30 +345,29 @@ class FeatureExtractor:
     def sub_segment_image(self,image,mask):
 
         # Output format is one-hot encoded sub-compartment masks
+        # Sub-compartment segmentation
+        sub_comp_image = np.zeros((np.shape(image)[0],np.shape(image)[1],3))
+        remainder_mask = np.ones((np.shape(image)[0],np.shape(image)[1]))
 
-        # Initializing sub-compartment mask and remaining pixels mask
-        sub_comp_image = np.zeros((np.shape(image)[0],np.shape(image)[1],len(self.sub_seg_params)))
-        remainder_mask = np.ones_like(mask)
+        hsv_image = np.uint8(255*rgb2hsv(image))
+        hsv_image = hsv_image[:,:,1]
 
-        # Converting image to HSV space (using saturation channel for thresholding)
-        hsv_image = np.uint8(255*rgb2hsv(image)[:,:,1])
-        # Applying histogram equalization
-        hsv_image = np.uint8(255*exposure.equalize_hist(hsv_image))
-        
-        # Iterating through sub-compartment parameters
-        for idx, param in enumerate(self.sub_seg_params):
+        for idx,param in enumerate(self.sub_seg_params):
 
-            remaining_pixels = np.multiply(hsv_image,remainder_mask)
-            masked_remaining_pixels = np.multiply(remaining_pixels,mask)
-
-            # Applying manually set threshold
-            masked_remaining_pixels[masked_remaining_pixels<=param['threshold']] = 0
-            masked_remaining_pixels[masked_remaining_pixels>0] = 1
-
-            # Check if the current sub-compartment is nuclei (additional special processing)
+            # Check for if the current sub-compartment is nuclei
             if param['name'].lower()=='nuclei':
+                # Using the inverse of the value channel for nuclei
+                h_image = 255-np.uint8(255*rgb2hsv(image)[:,:,2])
+                h_image = np.uint8(255*exposure.equalize_hist(h_image, mask = mask))
 
-                # Filling holes
+                remaining_pixels = np.multiply(h_image,remainder_mask)
+                masked_remaining_pixels = np.multiply(remaining_pixels,mask)
+
+                # Applying manual threshold
+                masked_remaining_pixels[masked_remaining_pixels<=param['threshold']] = 0
+                masked_remaining_pixels[masked_remaining_pixels>0] = 1
+
+                # Area threshold for holes is controllable for this
                 sub_mask = remove_small_holes(masked_remaining_pixels>0,area_threshold=10)
                 sub_mask = sub_mask>0
                 # Watershed implementation from: https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_watershed.html
@@ -383,15 +382,24 @@ class FeatureExtractor:
 
                 # Filtering out small objects again
                 sub_mask = remove_small_objects(sub_mask,param['min_size'])
+
             else:
 
+                remaining_pixels = np.multiply(hsv_image,remainder_mask)
+                masked_remaining_pixels = np.multiply(remaining_pixels,mask)
+
+                # Applying manual threshold
+                masked_remaining_pixels[masked_remaining_pixels<=param['threshold']] = 0
+                masked_remaining_pixels[masked_remaining_pixels>0] = 1
+
                 # Filtering by minimum size
-                small_object_filtered = remove_small_objects(masked_remaining_pixels>0,param['min_size'])
+                small_object_filtered = (1/255)*np.uint8(remove_small_objects(masked_remaining_pixels>0,param['min_size']))
+
                 sub_mask = small_object_filtered
 
             sub_comp_image[sub_mask>0,idx] = 1
             remainder_mask -= sub_mask>0
-        
+
         # Assigning remaining pixels within the boundary mask to the last sub-compartment
         remaining_pixels = np.multiply(mask,remainder_mask)
         sub_comp_image[remaining_pixels>0,idx] = 1
