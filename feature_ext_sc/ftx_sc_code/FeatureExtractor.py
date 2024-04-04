@@ -136,9 +136,10 @@ class FeatureExtractor:
                             try:
                                 image, mask = self.grab_image_and_mask(comp['points'])
                                 sub_compartment_mask = self.sub_segment_image(image, mask)
-                            except UnidentifiedImageError:
+                            except (UnidentifiedImageError, ValueError) as e:
                                 # I believe this error occurs when the number of unique points is less than 3
-                                print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
+                                print(e)
+                                print(f'PIL.UnidentifiedImageError or ValueError encountered in {ann["annotation"]["name"]}, {c_idx}')
                                 print(comp['points'])
                                 continue
 
