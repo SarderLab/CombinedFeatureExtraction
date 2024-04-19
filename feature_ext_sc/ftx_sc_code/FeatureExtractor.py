@@ -31,6 +31,7 @@ import json
 from tqdm import tqdm
 import os
 import random
+import sys
 
 import shutil
 
@@ -225,10 +226,14 @@ class FeatureExtractor:
             # Randomly select a structure from all the annotations and run feature extraction just for that one.
             all_ann_names = [i['annotation']['name'] for i in self.annotations]
             if isinstance(self.annotations,list):
-                ann_names = [i['annotation']['name'] for i in self.annotations if len(i['annotation']['elements'])>0]
+                ann_names = [i['annotation']['name'] for i in self.annotations if len(i['annotation']['elements'])>0 and i['annotation']['name'] not in self.skip_structures]
             elif isinstance(self.annotations, dict):
-                ann_names = [self.annotations['name']]
-            
+                if not self.annotations['name'] in self.skip_structures:
+                    ann_names = [self.annotations['name']]
+                else:
+                    print(f"Don't skip this structure! {self.annotations['name']}")
+                    sys.exit(1)
+
             chosen_ann = random.choice(ann_names)
             chosen_structure = np.random.randint(low=0,high = len(self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements']))
 
@@ -263,8 +268,8 @@ class FeatureExtractor:
             # Saving test sample info.
             combined_image_mask_sub = np.concatenate((image,np.uint8(255*np.repeat(mask[:,:,None],repeats=3,axis=-1)),np.uint8(255*sub_compartment_mask)),axis=1)
             if self.output_path is None:
-                image_path = f"/{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
-                feature_path = f"/{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
+                image_path = f"{os.getcwd()}/{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
+                feature_path = f"{os.getcwd()}/{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
             else:
                 image_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
                 feature_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
