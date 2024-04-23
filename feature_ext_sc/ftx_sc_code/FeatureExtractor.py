@@ -128,6 +128,7 @@ class FeatureExtractor:
 
                         # Initialize annotation/compartment dictionary, keys for each feature category specified in self.feature_list
                         compartment_feature_dict = {i:[] for i in self.feature_list}
+                        compartment_feature_dict['Bounding Boxes'] = []
 
                         # Iterating through elements in annotation
                         compartment_ids = []
@@ -135,8 +136,9 @@ class FeatureExtractor:
                             
                             # Extract image, mask, and sub-compartment mask
                             try:
-                                image, mask = self.grab_image_and_mask(comp['points'])
+                                image, mask, bbox = self.grab_image_and_mask(comp['points'])
                                 sub_compartment_mask = self.sub_segment_image(image, mask)
+
                             except (UnidentifiedImageError, ValueError) as e:
                                 # I believe this error occurs when the number of unique points is less than 3
                                 print(e)
@@ -150,6 +152,7 @@ class FeatureExtractor:
                                     comp['user'] = {}
 
                                 compartment_ids.append(ann['annotation']['name']+f'_{c_idx}')
+                                compartment_feature_dict['Bounding Boxes'].append({'x1': bbox[0], 'y1': bbox[1], 'x2': bbox[2], 'y2': bbox[3]})
 
                                 # Iterating through feature extraction function handles
                                 for feat in self.feature_extract_list:
@@ -166,6 +169,7 @@ class FeatureExtractor:
                                         comp['user'][c_f] = np.float64(cat_feat[c_f])
                                     
                                     self.annotations[a_idx]['annotation']['elements'][c_idx] = comp
+                            
                             else:
                                 continue
 
@@ -187,7 +191,7 @@ class FeatureExtractor:
                                         feat_df.to_excel(writer,sheet_name = feat_cat)
 
                                         # Aggregating features
-                                        if not feat_df.empty:
+                                        if not feat_df.empty and not feat_cat=='Bounding Boxes':
                                             agg_feat_df = self.aggregate_features(feat_df)
                                             for a_f in agg_feat_df:
                                                 agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'][a_f] = agg_feat_df[a_f]
@@ -198,7 +202,7 @@ class FeatureExtractor:
                                     feat_df['compartment_ids'] = compartment_ids
 
                                     # Aggregating features 
-                                    if not feat_df.empty:
+                                    if not feat_df.empty and not feat_cat=='Bounding Boxes':
                                         agg_feat_df = self.aggregate_features(feat_df)
                                         for a_f in agg_feat_df:
                                             agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'][a_f] = agg_feat_df[a_f]
@@ -240,7 +244,7 @@ class FeatureExtractor:
             comp = self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements'][chosen_structure]
             # Extract image, mask, and sub-compartment mask
             try:
-                image, mask = self.grab_image_and_mask(comp['points'])
+                image, mask, bbox = self.grab_image_and_mask(comp['points'])
                 sub_compartment_mask = self.sub_segment_image(image, mask)
             except UnidentifiedImageError:
                 # I believe this error occurs when the number of unique points is less than 3
@@ -346,7 +350,7 @@ class FeatureExtractor:
         cc,rr = polygon(y_coords,x_coords,(height,width))
         mask[cc,rr] = 1
 
-        return image, mask
+        return image, mask, [min_x, min_y, max_x, max_y]
 
     def sub_segment_image(self,image,mask):
 
