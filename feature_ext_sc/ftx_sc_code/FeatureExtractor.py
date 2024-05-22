@@ -18,7 +18,7 @@ from skimage.measure import label, regionprops
 from scipy import ndimage as ndi
 from skimage.feature import peak_local_max
 from skimage import exposure
-
+import large_image
 import girder_client
 
 from PIL import Image, UnidentifiedImageError
@@ -38,6 +38,7 @@ import shutil
 class FeatureExtractor:
     def __init__(self,
                  gc,
+                 slide,
                  slide_item_id: str,
                  sub_seg_params: list,
                  feature_list: list,
@@ -50,6 +51,7 @@ class FeatureExtractor:
 
         # Initializing properties of FeatureExtractor object
         self.gc = gc
+        self.slide=slide
         self.user_token = self.gc.get('/token/session')['token']
         self.sub_seg_params = sub_seg_params
         self.slide_item_id = slide_item_id
@@ -306,17 +308,9 @@ class FeatureExtractor:
 
         # Getting image from bbox region
         if not 'frames' in self.image_info:
-            image = np.uint8(
-                np.array(
-                    Image.open(
-                        BytesIO(
-                            requests.get(
-                                self.gc.urlBase+f'/item/{self.slide_item_id}/tiles/region?token={self.user_token}&left={min_x}&top={min_y}&right={max_x}&bottom={max_y}'
-                            ).content
-                        )
-                    )
-                )
-            )
+            image, _ = self.slide.getRegion(region=dict(left=min_x,top=min_y,width=max_x-min_x,height=max_y-min_y, units='base_pixels'),format=large_image.tilesource.TILE_FORMAT_NUMPY)
+            image = image.astype('uint8')
+            image = image[:,:,:3]
         else:
             # For multi-frame images:
             height = int(max_y - min_y)
@@ -324,17 +318,9 @@ class FeatureExtractor:
             image = np.zeros((height, width, 3),dtype = np.uint8)
 
             for i in range(len(self.image_info['frames'])):
-                image_frame = np.uint8(
-                    np.array(
-                        Image.open(
-                            BytesIO(
-                                requests.get(
-                                    self.gc.urlBase+f'/item/{self.slide_item_id}/tiles/region?token={self.user_token}&left={min_x}&top={min_y}&right={max_x}&bottom={max_y}&frame={i}'
-                                ).content
-                            )
-                        )
-                    )
-                )
+                image_frame, _ = self.slide.getRegion(region=dict(left=min_x,top=min_y,width=max_x-min_x,height=max_y-min_y,units='base_pixels'),frame =i,format=large_image.tilesource.TILE_FORMAT_NUMPY)
+                image_frame = image_frame.astype('uint8')
+                image_frame = image_frame[:,:,:3]
 
                 image[:,:,i] += np.squeeze(image_frame)
 

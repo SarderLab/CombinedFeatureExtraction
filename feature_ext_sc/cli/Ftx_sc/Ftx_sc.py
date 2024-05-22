@@ -1,7 +1,7 @@
 import os
 import sys
 from ctk_cli import CLIArgumentParser
-
+import large_image
 sys.path.append("..")
 from ftx_sc_code.FeatureExtractor import FeatureExtractor
 
@@ -33,6 +33,20 @@ def main(args):
     folder_id = item_info['folderId']
     folder_info = gc.get(f'/folder/{folder_id}')    
     print(f'{file_name} is in {folder_info["name"]}')
+
+    mounted_path = '{}/{}'.format('/mnt/girder_worker', os.listdir('/mnt/girder_worker')[0])
+    gc.downloadItem(item_id, mounted_path, file_name)
+
+    file_path = '{}/{}'.format(mounted_path,file_name)
+    if not os.path.isfile(file_path):
+        file_path = '{}/{}'.format(file_path,file_name)
+    
+    print(f'This is slide path: {file_path}')
+
+    slide = large_image.getTileSource(file_path)
+    dim_x, dim_y = slide.metadata['sizeX'],slide.metadata['sizeY']
+
+    print(f'Read the slide with dimensions: {dim_x, dim_y}')
 
     # Converting sub-compartment segmentation parameters to correct format
     thresh_nuc = int(args.threshold_nuclei)
@@ -90,6 +104,7 @@ def main(args):
     # Defining feature extractor object which should take care of the rest
     FeatureExtractor(
         gc = gc,
+        slide = slide,
         slide_item_id = item_id,
         sub_seg_params=sub_seg_params,
         feature_list = feature_list,

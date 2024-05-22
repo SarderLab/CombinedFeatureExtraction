@@ -76,7 +76,8 @@ WORKDIR $ftx_sc_path
 
 # Installing packages in setup.py
 RUN pip install --no-cache-dir --upgrade --ignore-installed pip setuptools && \
-    pip install --no-cache-dir .  && \
+    pip install --no-cache-dir 'large-image[memcached]' && \
+    pip install --no-cache-dir .  --find-links https://girder.github.io/large_image_wheels && \
     rm -rf /root/.cache/pip/*
 
 # Show what was installed

@@ -56,6 +56,7 @@ setup(
         'scikit-image==0.20.0',
         'tqdm==4.65.0',
         'openpyxl==3.1.2',
+        'large-image[sources]',
         # dask packages
         'dask==2023.9.0',
         'girder-slicer-cli-web',
