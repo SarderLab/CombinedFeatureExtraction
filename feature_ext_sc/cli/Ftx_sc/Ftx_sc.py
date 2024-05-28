@@ -107,7 +107,7 @@ def main(args):
         feature_list = feature_list,
         skip_structures = skip_structures,
         rename = rename,
-        test_run = args.test_run,
+        test_run = False,
         output_path = output_path,
         replace_annotations = args.replace_annotations
     )
