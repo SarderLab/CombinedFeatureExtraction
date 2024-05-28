@@ -8,23 +8,20 @@ Morphometric feature extraction features for sub-compartments within segmented F
 import numpy as np
 import cv2
 from skimage.feature import graycomatrix, graycoprops
-from skimage.measure import regionprops
 from skimage.color import rgb2gray, rgb2hsv
 
-from skimage.color import rgb2hsv
 from skimage.morphology import remove_small_objects, remove_small_holes
 from skimage.segmentation import watershed
 from skimage.measure import label, regionprops
 from scipy import ndimage as ndi
 from skimage.feature import peak_local_max
 from skimage import exposure
-import large_image
+
 import girder_client
 
 from PIL import Image, UnidentifiedImageError
 Image.MAX_IMAGE_PIXELS = None
-import requests
-from io import BytesIO
+
 from skimage.draw import polygon
 import pandas as pd
 import json
@@ -306,23 +303,9 @@ class FeatureExtractor:
         max_x = int(np.max(coordinates[:,0]))
         max_y = int(np.max(coordinates[:,1]))
 
-        # Getting image from bbox region
-        if not 'frames' in self.image_info:
-            image, _ = self.slide.getRegion(region=dict(left=min_x,top=min_y,width=max_x-min_x,height=max_y-min_y, units='base_pixels'),format=large_image.tilesource.TILE_FORMAT_NUMPY)
-            image = image.astype('uint8')
-            image = image[:,:,:3]
-        else:
-            # For multi-frame images:
-            height = int(max_y - min_y)
-            width = int(max_x - min_x)
-            image = np.zeros((height, width, 3),dtype = np.uint8)
-
-            for i in range(len(self.image_info['frames'])):
-                image_frame, _ = self.slide.getRegion(region=dict(left=min_x,top=min_y,width=max_x-min_x,height=max_y-min_y,units='base_pixels'),frame =i,format=large_image.tilesource.TILE_FORMAT_NUMPY)
-                image_frame = image_frame.astype('uint8')
-                image_frame = image_frame[:,:,:3]
-
-                image[:,:,i] += np.squeeze(image_frame)
+        image = self.slide.read_region((min_x,min_y),0,(max_x-min_x, max_y-min_y))
+        image = np.array(image,dtype=np.uint8)
+        image = image[:,:,:3]
 
         scaled_coordinates = coordinates.tolist()
         scaled_coordinates = [[int(i[0]-min_x), int(i[1]-min_y)] for i in scaled_coordinates]

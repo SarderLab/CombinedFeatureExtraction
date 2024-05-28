@@ -1,7 +1,7 @@
 import os
 import sys
 from ctk_cli import CLIArgumentParser
-import large_image
+from tiffslide import TiffSlide
 sys.path.append("..")
 from ftx_sc_code.FeatureExtractor import FeatureExtractor
 
@@ -35,16 +35,13 @@ def main(args):
     print(f'{file_name} is in {folder_info["name"]}')
 
     mounted_path = '{}/{}'.format('/mnt/girder_worker', os.listdir('/mnt/girder_worker')[0])
-    gc.downloadItem(item_id, mounted_path, file_name)
-
     file_path = '{}/{}'.format(mounted_path,file_name)
-    if not os.path.isfile(file_path):
-        file_path = '{}/{}'.format(file_path,file_name)
-    
+    gc.downloadFile(file_id, file_path)
+
     print(f'This is slide path: {file_path}')
 
-    slide = large_image.getTileSource(file_path)
-    dim_x, dim_y = slide.metadata['sizeX'],slide.metadata['sizeY']
+    slide = TiffSlide(file_path)
+    dim_x, dim_y = slide.dimensions
 
     print(f'Read the slide with dimensions: {dim_x, dim_y}')
 
