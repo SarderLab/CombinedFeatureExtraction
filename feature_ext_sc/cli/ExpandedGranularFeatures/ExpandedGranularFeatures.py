@@ -73,11 +73,7 @@ def main(args):
     ]
 
     # Getting list of features to calculate
-    feature_list = args.featureCats.split(',')
-    if not type(feature_list)==list:
-        feature_list = [feature_list]
-    
-    feature_list = [i.replace('"','') for i in feature_list]
+    feature_list = ['Distance Transform Features','Color Features','Texture Features','Morphological Features']
 
     # Getting structures to skip
     skip_structures = args.ignoreAnns.split(',')
@@ -95,6 +91,7 @@ def main(args):
             output_path = '/tmp/'
     else:
         output_path = None
+    output_path = '/tmp/'
 
     # Added parameter "test_run". Selecting this runs feature extraction and sub-compartment determination for a single randomly selected structure.
 
@@ -106,10 +103,10 @@ def main(args):
         sub_seg_params=sub_seg_params,
         feature_list = feature_list,
         skip_structures = skip_structures,
-        rename = rename,
-        test_run = False,
+        test_run = args.type == 'test_run',
         output_path = output_path,
-        replace_annotations = args.replace_annotations
+        replace_annotations = args.replace_annotations,
+        returnXlsx = args.returnXlsx
     )
 
 

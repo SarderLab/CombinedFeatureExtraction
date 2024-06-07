@@ -91,7 +91,7 @@ WORKDIR $ftx_sc_path/feature_ext_sc/cli
 # Test our entrypoint.  If we have incompatible versions of numpy and
 # openslide, one of these will fail
 RUN python -m slicer_cli_web.cli_list_entrypoint --list_cli
-RUN python -m slicer_cli_web.cli_list_entrypoint Ftx_sc --help
+RUN python -m slicer_cli_web.cli_list_entrypoint ExpandedGranularFeatures --help
 
 
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]

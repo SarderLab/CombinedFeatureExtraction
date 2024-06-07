@@ -40,10 +40,10 @@ class FeatureExtractor:
                  sub_seg_params: list,
                  feature_list: list,
                  skip_structures: list,
-                 rename: bool,
                  test_run: bool,
-                 output_path = None,
-                 replace_annotations = True
+                 output_path = str,
+                 replace_annotations = True,
+                 returnXlsx=bool
                  ):
 
         # Initializing properties of FeatureExtractor object
@@ -55,18 +55,13 @@ class FeatureExtractor:
         self.feature_list = feature_list
         self.skip_structures = skip_structures
         self.output_path = output_path
-        self.rename = rename
         self.test_run = test_run
         self.replace_annotations = replace_annotations
+        self.returnXlsx = returnXlsx
 
         # Getting image information:
         self.image_info = self.gc.get(f'/item/{self.slide_item_id}/tiles')
-
-        # If outputting excel files, create a tmp directory
-        if not self.output_path is None:
-            os.makedirs(self.output_path,exist_ok=True)
-            output_filenames = []
-
+        output_filenames=[]
         # Making feature extract list
         self.feature_extract_list = {} 
 
@@ -91,21 +86,6 @@ class FeatureExtractor:
         # Getting the names of the sub-compartments
         self.sub_comp_names = [i['name'] for i in self.sub_seg_params]
 
-        # Names key to fix output annotation names
-        if self.rename:
-            self.names_key = {
-                'non_globally_sclerotic_glomeruli':'Glomeruli',
-                'globally_sclerotic_glomeruli':'Sclerotic Glomeruli',
-                'arteries/arterioles':'Arteries and Arterioles',
-                'non_globally_sclerotic_glomeruli_manual':'Glomeruli',
-                'globally_sclerotic_glomeruli_manual':'Sclerotic Glomeruli',
-                'arteries/arterioles_manual':'Arteries and Arterioles',
-                'tubules_manual':'Tubules',
-                'gloms':'Glomeruli'
-            }
-        else:
-            self.names_key = {}
-
         # Getting annotations
         self.annotations = self.gc.get(f'annotation/item/{self.slide_item_id}')
         
@@ -120,10 +100,6 @@ class FeatureExtractor:
                         if ann['annotation']['name'] in self.skip_structures:
                             print(f'Skipping {ann["annotation"]["name"]}')
                             continue
-
-                        # Replacing names if present in names key
-                        if ann['annotation']['name'] in list(self.names_key.keys()):
-                            ann['annotation']['name'] = self.names_key[ann['annotation']['name']]
 
                         # Initialize annotation/compartment dictionary, keys for each feature category specified in self.feature_list
                         compartment_feature_dict = {i:[] for i in self.feature_list}
@@ -175,7 +151,7 @@ class FeatureExtractor:
                         if len(compartment_ids)>0:
 
                             agg_feat_metadata[f'{ann["annotation"]["name"]}_Morphometrics'] = {}
-                            if not self.output_path is None:
+                            if self.returnXlsx:
                                 # Outputting compartment features to excel file (one sheet per feature category)
                                 output_file = self.output_path+'/'+f'{ann["annotation"]["name"].replace("/","")}_Features.xlsx'
                                 output_filenames.append(output_file)
@@ -219,7 +195,7 @@ class FeatureExtractor:
                 self.post_annotations()
 
             # Adding output excel files if present
-            if not self.output_path is None:
+            if self.returnXlsx:
                 print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
                 for path in output_filenames:
                     self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
@@ -270,12 +246,9 @@ class FeatureExtractor:
 
             # Saving test sample info.
             combined_image_mask_sub = np.concatenate((image,np.uint8(255*np.repeat(mask[:,:,None],repeats=3,axis=-1)),np.uint8(255*sub_compartment_mask)),axis=1)
-            if self.output_path is None:
-                image_path = f"{os.getcwd()}/{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
-                feature_path = f"{os.getcwd()}/{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
-            else:
-                image_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
-                feature_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
+        
+            image_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
+            feature_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
 
             Image.fromarray(combined_image_mask_sub).save(image_path)
             with open(feature_path,'w') as f:

@@ -2,7 +2,7 @@
 <executable>
   <category>HistomicsTK</category>
   <title>Feature Extraction</title>
-  <description>FTX</description>
+  <description>Run and Test Expanded Granular Features</description>
   <version>0.1.0</version>
   <documentation-url>https://github.com/SarderLab/Feature_Extraction_SubCompartments/</documentation-url>
   <license>Apache 2.0</license>
@@ -11,12 +11,21 @@
   <parameters>
     <label>IO</label>
     <description>Input/output parameters.</description>
+    <string-enumeration>
+      <name>type</name>
+      <label>Job Type</label>
+      <description>Type of Job: "Feature Pipeline" or "Test Run"</description>
+      <default>feature_pipeline</default>
+      <element>feature_pipeline</element>
+      <element>test_run</element>
+      <index>0</index>
+    </string-enumeration>
     <image reference="_girder_id_">
       <name>input_image</name>
       <label>Input Image</label>
       <description>Input Filename </description>
       <channel>input</channel>
-      <index>0</index>
+      <index>1</index>
     </image>
     <integer>
       <name>threshold_nuclei</name>
@@ -85,16 +94,9 @@
       <default></default>
     </string>
     <string>
-      <name>featureCats</name>
-      <longflag>feature_categories</longflag>
-      <label>Types of Features</label>
-      <description>Types of morphometric features to include (comma separated list, remove features that aren't desired, replace spaces with underscores)</description>
-      <default>Distance Transform Features,Color Features,Texture Features,Morphological Features</default>
-    </string>
-    <string>
       <name>ignoreAnns</name>
       <longflag>ignore_anns</longflag>
-      <label>Ignore Annotations</label>
+      <label>Ignore Annotations (test run only)</label>
       <description>Specify annotation names to ignore (spots and interstitium are automatically skipped, comma separated list)</description>
       <default>""</default>
     </string>
@@ -108,14 +110,14 @@
     <boolean>
       <name>returnXlsx</name>
       <longflag>return_xlsx</longflag>
-      <label>Return Excel File(s)</label>
+      <label>Return Excel File(s) (test run only)</label>
       <description>Whether or not to output excel files containing morphometric features (must also specify path)</description>
       <default>0</default>
     </boolean>
     <boolean>
       <name>replace_annotations</name>
       <longflag>replace_annotations</longflag>
-      <label>Replace Annotations</label>
+      <label>Annotations with Feature Data</label>
       <description>Replace current annotations with copies that contain feature values as metadata.</description>
       <default>1</default>
     </boolean>
