@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <executable>
   <category>HistomicsTK</category>
-  <title>Feature Extraction</title>
+  <title>Expanded Granular Feature Extraction</title>
   <description>Run and Test Expanded Granular Features</description>
   <version>0.1.0</version>
   <documentation-url>https://github.com/SarderLab/Feature_Extraction_SubCompartments/</documentation-url>
