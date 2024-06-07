@@ -30,10 +30,6 @@ def main(args):
     file_name = file_info['name']
     print(f'Running on: {file_name}')
 
-    folder_id = item_info['folderId']
-    folder_info = gc.get(f'/folder/{folder_id}')    
-    print(f'{file_name} is in {folder_info["name"]}')
-
     mounted_path = '{}/{}'.format('/mnt/girder_worker', os.listdir('/mnt/girder_worker')[0])
     file_path = '{}/{}'.format(mounted_path,file_name)
     gc.downloadFile(file_id, file_path)
@@ -80,22 +76,8 @@ def main(args):
     if not type(skip_structures)==list:
         skip_structures = [skip_structures]
 
-    # Whether or not to rename structures to nicer names
-    rename = args.rename
-
-    # Output path for excel files (if specified)
-    if args.returnXlsx:
-        if 'output_path' in vars(args):
-            output_path = args.output_path
-        else:
-            output_path = '/tmp/'
-    else:
-        output_path = None
     output_path = '/tmp/'
 
-    # Added parameter "test_run". Selecting this runs feature extraction and sub-compartment determination for a single randomly selected structure.
-
-    # Defining feature extractor object which should take care of the rest
     FeatureExtractor(
         gc = gc,
         slide = slide,
@@ -109,38 +91,5 @@ def main(args):
         returnXlsx = args.returnXlsx
     )
 
-
 if __name__ == "__main__":
-
-    
-    # If running this locally, just enter the output_path manually.
-    # output_path is not included in the available args specified in Ftx_sc.xml
-    """
-    class args_object:
-        def __init__(self):
-            self.girderApiUrl = "http://ec2-3-230-122-132.compute-1.amazonaws.com:8080/api/v1/"
-            self.girderToken = ""
-
-            self.input_image = ""
-
-            self.threshold_nuclei = 200
-            self.threshold_PAS = 60
-            self.threshold_LS = 0
-            self.minsize_LS = 0
-            self.minsize_nuclei = 50
-            self.minsize_PAS = 20
-
-            self.featureCats = "Distance Transform Features,Color Features,Texture Features,Morphological Features"
-            self.ignoreAnns = ""
-            self.returnXlsx = True
-            self.output_path = ""
-            self.rename = True
-            self.test_run = True,
-            self.replace_annotations = True
-
-
-    args = args_object()
-    main(args)
-    """
-    # Comment this line out if running locally
     main(CLIArgumentParser().parse_args())
