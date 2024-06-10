@@ -2,17 +2,18 @@ import os
 import argparse
 import sys
 import time
+from enum import Enum
 
 sys.path.append('..')
 
+from .extract_reference_features import getExtendedClinicalFeatures
+from .run_pathomic_fe import getPathomicFeatures
+
 class InputType(Enum):
-    pathomic = 'pathomic'
-    extended_clinical = 'extended_clinical'
+    pathomic = 'Pathomic'
+    extended_clinical = 'Extended_Clinical'
 
 def main(args):
-
-    from extractioncodes.Codes.extract_extended_clinical_features import getExtendedClinicalFeatures
-
 
     if args.type == InputType.pathomic.value:
         getPathomicFeatures(args=args)
@@ -22,18 +23,5 @@ def main(args):
         print('please specify an option in: \n\t--option [get_extended_clinical_features, get_pathomic_features]')
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--girderApiUrl', dest='girderApiUrl', default=' ' ,type=str,
-        help='girderApiUrl')
-    parser.add_argument('--girderToken', dest='girderToken', default=' ' ,type=str,
-        help='girderToken')
-    parser.add_argument('--option', dest='option', default=' ' ,type=str,
-        help='option for [get_extended_clinical_features, get_pathomic_features]')
-    parser.add_argument('--wsi_xml', dest='wsi_xml', default=' ' ,type=str,
-        help='path to input wsi and xml file')
-
-
-    args = parser.parse_args()
-    main(args=args)
+def run_main(args):
+    main(args)

@@ -6,8 +6,8 @@ from skimage.morphology import remove_small_objects,binary_erosion,binary_dilati
 from skimage.filters import threshold_otsu
 from skimage import measure
 import cv2
-from .extract_ffpe_features import imreconstruct
-from .PAS_deconvolution import deconvolution
+from fextract.extraction_utils.extract_ffpe_features import imreconstruct
+from fextract.extraction_utils.PAS_deconvolution import deconvolution
 
 
 def process_glom_features(points, MOD, slide, h_threshold, saturation_threshold):
