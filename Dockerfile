@@ -6,7 +6,7 @@
 
 FROM python:3.11
 
-LABEL maintainer="Sumanth Devarasetty and Sam Border - Computational Microscopy Imaging Lab. <sumanth.devarasetty@medicine.ufl.edu> <samuel.border@medicine.ufl.edu>"
+LABEL maintainer="Sayat Mimar and Sam Border - Computational Microscopy Imaging Lab. <Sayat.Mimar@medicine.ufl.edu> <samuel.border@medicine.ufl.edu>"
 
 RUN apt-get update && \
     apt-get autoremove && \
