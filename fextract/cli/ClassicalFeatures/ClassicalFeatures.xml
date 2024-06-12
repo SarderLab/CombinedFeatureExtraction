@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <executable>
   <category>HistomicsTK</category>
-  <title>Extract Extended Clinical Features</title>
-  <description>Extract reference features</description>
+  <title>Extract Classical Features</title>
+  <description>Extract Pathomic and Extended Clinical Features</description>
   <version>0.1.0</version>
   <documentation-url>https://github.com/SarderLab/Multi-Compartment-Segmentation</documentation-url>
   <license>Apache 2.0</license>
@@ -15,15 +15,15 @@
       <name>type</name>
       <label>Extraction Type</label>
       <description>Type of Feature Extraxtion: "Pathomic" or "Extended Clinical"</description>
-      <default>pathomic</default>
-      <element>pathomic</element>
-      <element>extended_clinical</element>
+      <default>Pathomic</default>
+      <element>Pathomic</element>
+      <element>Extended_Clinical</element>
       <index>0</index>
     </string-enumeration>
     <image reference="_girder_id_">
-      <name>input_files</name>
-      <label>input_files</label>
-      <description>input files</description>
+      <name>input_file</name>
+      <label>input_file</label>
+      <description>input file</description>
       <channel>input</channel>
       <index>1</index>
     </image>

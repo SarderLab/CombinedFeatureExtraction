@@ -7,6 +7,9 @@ import sys
 from setuptools import find_packages
 from setuptools import setup
 
+with open('README.rst', 'rt') as readme_file:
+    readme = readme_file.read()
+
 def prerelease_local_scheme(version):
     """
     Return local scheme version unless building on master in CircleCI.
@@ -50,6 +53,7 @@ setup(
         'scikit-learn==1.0.2',
         'lxml==4.2.2',
         'joblib==1.1.0',
+        'matplotlib',
         #'tifffile==2021.11.2',
         'tiffslide',
         'tqdm==4.64.0',
@@ -61,6 +65,7 @@ setup(
         'girder-slicer-cli-web',
         'girder-client',
         'ctk-cli',
+        'XlsxWriter'
         
     ],
     license='Apache Software License 2.0',
