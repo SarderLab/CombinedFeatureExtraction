@@ -5,6 +5,7 @@ import os
 import sys
 
 from setuptools import find_packages
+<<<<<<< HEAD
 
 from setuptools import setup
 
@@ -13,6 +14,13 @@ with open('README.rst', 'rt') as readme_file:
     readme = readme_file.read()
 
 
+=======
+from setuptools import setup
+
+with open('README.rst', 'rt') as readme_file:
+    readme = readme_file.read()
+
+>>>>>>> Classical_FE
 def prerelease_local_scheme(version):
     """
     Return local scheme version unless building on master in CircleCI.
@@ -31,6 +39,7 @@ def prerelease_local_scheme(version):
 
 
 setup(
+<<<<<<< HEAD
     name='Ftx_sc',
     use_scm_version={'local_scheme': prerelease_local_scheme},
     description='Morphometric feature extraction codes for sub-compartments in histology images',
@@ -42,11 +51,25 @@ setup(
     packages=find_packages(exclude=['tests', '*_test']),
     package_dir={
         'Ftx_sc': 'Ftx_sc',
+=======
+    name='fextract',
+    use_scm_version={'local_scheme': prerelease_local_scheme},
+    description='Extract pathomic and extended clinical features',
+    long_description=readme,
+    long_description_content_type='text/x-rst',
+    author='Sayat Mimar',
+    author_email='sayat.mimar@ufl.edu',
+    url='https://github.com/SarderLab/CombinedFeatureExtraction',
+    packages=find_packages(exclude=['tests', '*_test']),
+    package_dir={
+        'fextract': 'fextract',
+>>>>>>> Classical_FE
     },
     include_package_data=True,
     install_requires=[
         # scientific packages
         'nimfa>=1.3.2',
+<<<<<<< HEAD
         'numpy==1.24.3',
         'scipy==1.10.1',
         'Pillow==9.5.0',
@@ -70,8 +93,49 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.11',
+=======
+        'numpy==1.19.5',
+        'scipy>=0.19.0',
+        'Pillow==9.5.0',
+        'pandas==1.1.5',
+        'opencv-python',
+        'scikit-image==0.19.2',
+        'scikit-learn==1.0.2',
+        'lxml==4.2.2',
+        'joblib==1.1.0',
+        'matplotlib',
+        #'tifffile==2021.11.2',
+        'tiffslide',
+        'tqdm==4.64.0',
+        'openpyxl',
+        'xlrd<2',
+        # dask packages
+        'dask[dataframe]>=1.1.0',
+        'distributed>=1.21.6',
+        'girder-slicer-cli-web',
+        'girder-client',
+        'ctk-cli',
+        'XlsxWriter'
+        
+    ],
+    license='Apache Software License 2.0',
+    keywords='podo',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+>>>>>>> Classical_FE
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     zip_safe=False,
+<<<<<<< HEAD
 )
+=======
+)
+>>>>>>> Classical_FE

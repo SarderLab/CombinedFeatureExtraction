@@ -6,7 +6,7 @@ import lxml.etree as ET
 from matplotlib import path
 from skimage.color import rgb2lab,rgb2hsv
 
-from .xml_to_mask_minmax import write_minmax_to_xml
+from fextract.extraction_utils.xml_to_mask_minmax import write_minmax_to_xml
 import xlsxwriter
 import multiprocessing
 from scipy.ndimage.morphology import distance_transform_edt
@@ -20,33 +20,25 @@ from skimage.color import rgb2hsv
 
 from skimage.filters import *
 
-def getKidneyReferenceFeatures(args):
+CHOP_THUMBNAIL_RESOLUTION = 16
+MIN_SIZE = [30,30,30,30,30,30]
+def getExtendedClinicalFeatures(args):
 
     folder = args.base_dir
 
     # assert args.target is not None, 'Directory of xmls must be specified, use --target /path/to/files.xml'
     # assert args.wsis is not None, 'Directory of WSIs must be specified, use --wsis /path/to/wsis'
-    if args.platform == 'DSA':
-        import girder_client
-        gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
-        gc.setToken(args.girderToken)
+  
+    import girder_client
+    gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
+    gc.setToken(args.girderToken)
 
-        file_name = args.file.split('/')[-1]
-        slide_item_id = args.item_id
-        output_dir = args.base_dir
-        slide_name,slideExt=file_name.split('.')
-        items=[(args.file, args.xml_path)]
+    file_name = args.file.split('/')[-1]
+    slide_item_id = args.item_id
+    output_dir = args.base_dir
+    slide_name,slideExt=file_name.split('.')
+    items=[(args.file, args.xml_path)]
 
-    elif args.platform == 'HPG':
-        image_files = [image_name for _, _, files in os.walk(folder) for image_name in files if image_name.endswith('.xml')]
-        image_names = [os.path.join(folder, f.split('.')[0]) for f in image_files]
-        slideExt = args.ext
-        output_dir = args.output_dir
-        # each item in items is a tuple of (images, annotations)
-        items = [(f + slideExt, f + '.xml') for f in image_names]
-
-    else:
-        raise Exception("Please Enter a valid Platform, DSA or HPG")
 
     for i in range(len(items)):
 
@@ -93,7 +85,7 @@ def getKidneyReferenceFeatures(args):
 
 
         fullSize=slide.level_dimensions[0]
-        resRatio= args.chop_thumbnail_resolution
+        resRatio= CHOP_THUMBNAIL_RESOLUTION
         ds_1=fullSize[0]/resRatio
         ds_2=fullSize[1]/resRatio
 
@@ -167,14 +159,14 @@ def getKidneyReferenceFeatures(args):
         MODz[2]= 0.0
         MOD=[MODx,MODy,MODz]
         glom_features=Parallel(n_jobs=cores)(delayed(points_to_features_glom)(points,
-            args,args.min_size[2],cortex_path,medulla_path) for points in tqdm(all_contours['3'],colour='yellow',unit='Glomerulus',leave=False))
+            args,MIN_SIZE[2],cortex_path,medulla_path) for points in tqdm(all_contours['3'],colour='yellow',unit='Glomerulus',leave=False))
         sglom_features=Parallel(n_jobs=cores)(delayed(points_to_features_glom)(points,
-            args,args.min_size[3],cortex_path,medulla_path) for points in tqdm(all_contours['4'],colour='red',unit='Scl. glomerulus',leave=False))
+            args,MIN_SIZE[3],cortex_path,medulla_path) for points in tqdm(all_contours['4'],colour='red',unit='Scl. glomerulus',leave=False))
         tub_features=Parallel(n_jobs=cores)(delayed(points_to_features_tub)(points,
-            args,args.min_size[4],cortex_path,medulla_path) for points in tqdm(all_contours['5'],colour='blue',unit='Tubule',leave=False))
+            args,MIN_SIZE[4],cortex_path,medulla_path) for points in tqdm(all_contours['5'],colour='blue',unit='Tubule',leave=False))
 
         art_features=Parallel(n_jobs=cores)(delayed(points_to_features_art)(points,
-            args,args.min_size[5],cortex_path,medulla_path,svsfile,MOD) for points in tqdm(all_contours['6'],colour='magenta',unit='Artery(-iole)',leave=False))
+            args,MIN_SIZE[5],cortex_path,medulla_path,svsfile,MOD) for points in tqdm(all_contours['6'],colour='magenta',unit='Artery(-iole)',leave=False))
         print('Generating output file..')
         glom_features=np.array([i for i in glom_features if i is not None])
         sglom_features=np.array([i for i in sglom_features if i is not None])
@@ -369,7 +361,7 @@ def getKidneyReferenceFeatures(args):
             worksheet5.write(idx+1,2,tub[6])
             worksheet5.write(idx+1,3,tub[7])
 
-             worksheet5.write(idx+1,4,tub[0])
+            worksheet5.write(idx+1,4,tub[0])
             worksheet5.write(idx+1,5,tub[1])
             worksheet5.write(idx+1,6,tub[3])
 
@@ -393,9 +385,9 @@ def getKidneyReferenceFeatures(args):
             worksheet6.write(idx+1,6,art[4])
 
         workbook.close()
-        if args.platform == 'DSA':
-            gc.uploadFileToItem(slide_item_id, xlsx_path, reference=None, mimeType=None, filename=None, progressCallback=None)
-            print('Girder file uploaded!')
+
+        gc.uploadFileToItem(slide_item_id, xlsx_path, reference=None, mimeType=None, filename=None, progressCallback=None)
+        print('Girder file uploaded!')
 
         print('Done.')
 
