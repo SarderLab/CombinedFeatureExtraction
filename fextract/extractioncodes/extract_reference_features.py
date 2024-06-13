@@ -24,8 +24,6 @@ CHOP_THUMBNAIL_RESOLUTION = 16
 MIN_SIZE = [30,30,30,30,30,30]
 def getExtendedClinicalFeatures(args):
 
-    folder = args.base_dir
-
     # assert args.target is not None, 'Directory of xmls must be specified, use --target /path/to/files.xml'
     # assert args.wsis is not None, 'Directory of WSIs must be specified, use --wsis /path/to/wsis'
   
