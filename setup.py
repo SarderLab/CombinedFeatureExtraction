@@ -50,7 +50,6 @@ setup(
         'pandas==1.1.5',
         'opencv-python',
         'scikit-image==0.19.2',
-        'scikit-learn==1.0.2',
         'lxml==4.2.2',
         'joblib==1.1.0',
         'matplotlib',
@@ -65,8 +64,7 @@ setup(
         'girder-slicer-cli-web',
         'girder-client',
         'ctk-cli',
-        'XlsxWriter'
-        
+        'XlsxWriter'    
     ],
     license='Apache Software License 2.0',
     keywords='podo',

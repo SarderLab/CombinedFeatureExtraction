@@ -3,7 +3,7 @@ import sys
 from ctk_cli import CLIArgumentParser
 from tiffslide import TiffSlide
 sys.path.append("..")
-from ftx_sc_code.FeatureExtractor import FeatureExtractor
+from extractioncodes.FeatureExtractor import FeatureExtractor
 
 import girder_client
 
@@ -85,7 +85,7 @@ def main(args):
         sub_seg_params=sub_seg_params,
         feature_list = feature_list,
         skip_structures = skip_structures,
-        test_run = args.type == 'test_run',
+        test_run = args.type == 'Test_Run',
         output_path = output_path,
         replace_annotations = args.replace_annotations,
         returnXlsx = args.returnXlsx
