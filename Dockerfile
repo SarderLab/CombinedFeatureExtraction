@@ -104,5 +104,6 @@ WORKDIR $fe_path/fextract/cli
 # Openslide, one of these will fail
 RUN python -m slicer_cli_web.cli_list_entrypoint --list_cli
 RUN python -m slicer_cli_web.cli_list_entrypoint ClassicalFeatures --help
+RUN python -m slicer_cli_web.cli_list_entrypoint ExpandedGranularFeatures --help
 
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]

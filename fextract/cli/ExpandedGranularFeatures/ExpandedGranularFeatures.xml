@@ -15,9 +15,9 @@
       <name>type</name>
       <label>Job Type</label>
       <description>Type of Job: "Feature Pipeline" or "Test Run"</description>
-      <default>feature_pipeline</default>
-      <element>feature_pipeline</element>
-      <element>test_run</element>
+      <default>Feature_Pipeline</default>
+      <element>Feature_Pipeline</element>
+      <element>Test_Run</element>
       <index>0</index>
     </string-enumeration>
     <image reference="_girder_id_">
