@@ -32,6 +32,9 @@ import sys
 
 import shutil
 
+
+NAMES = ['cortical_interstitium','medullary_interstitium','non_globally_sclerotic_glomeruli','globally_sclerotic_glomeruli','tubules','arteries/arterioles']
+
 class FeatureExtractor:
     def __init__(self,
                  gc,
@@ -87,7 +90,8 @@ class FeatureExtractor:
         self.sub_comp_names = [i['name'] for i in self.sub_seg_params]
 
         # Getting annotations
-        self.annotations = self.gc.get(f'annotation/item/{self.slide_item_id}')
+        annotations = self.gc.get(f'annotation/item/{self.slide_item_id}', parameters={'sort': 'updated'})
+        self.annotations = [annot for annot in annotations if annot['annotation']['name'].strip() in NAMES]
         
         if not self.test_run:
             agg_feat_metadata = {}
