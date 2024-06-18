@@ -31,9 +31,13 @@ import random
 import sys
 
 import shutil
-
+from PIL import Image, ImageDraw, ImageFont
 
 NAMES = ['cortical_interstitium','medullary_interstitium','non_globally_sclerotic_glomeruli','globally_sclerotic_glomeruli','tubules','arteries/arterioles']
+# Define color coding
+RED = [255, 0, 0]
+GREEN = [0, 255, 0]
+BLUE = [0, 0, 255]
 
 class FeatureExtractor:
     def __init__(self,
@@ -250,11 +254,22 @@ class FeatureExtractor:
 
             # Saving test sample info.
             combined_image_mask_sub = np.concatenate((image,np.uint8(255*np.repeat(mask[:,:,None],repeats=3,axis=-1)),np.uint8(255*sub_compartment_mask)),axis=1)
-        
+            
+            # Converting to PIL Image
+            combined_image = Image.fromarray(combined_image_mask_sub)
+
+            # Extending the canvas to add the legend
+            image_width, image_height = combined_image.size
+            new_width = image_width + 250  # Additional width for the legend
+            extended_image = Image.new('RGB', (new_width, image_height), (0, 0, 0))
+            extended_image.paste(combined_image, (0, 0))
+
+            # Adding legend on the extended part
+            self.add_legend(extended_image)
             image_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
             feature_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
 
-            Image.fromarray(combined_image_mask_sub).save(image_path)
+            extended_image.save(image_path)
             with open(feature_path,'w') as f:
                 json.dump(test_features,f)
                 f.close()
@@ -618,10 +633,27 @@ class FeatureExtractor:
             except (json.decoder.JSONDecodeError, girder_client.HttpError) as error:
                 print(f'Error occurred on {ann["name"]}')
 
+    def add_legend(self, image):
+        draw = ImageDraw.Draw(image)
+        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+        font_size = 18
+        font = ImageFont.truetype(font_path, font_size)
+        legend_texts = ["Nuclei", "Eosinophilic", "Background"]
+        legend_colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 
+        # positions for the legend
+        image_width, image_height = image.size
+        legend_x = image_width - 250
+        legend_y_start = 10
+        legend_y_spacing = 40
 
-
-
-
+        for index, (text, color) in enumerate(zip(legend_texts, legend_colors)):
+            position = (legend_x, legend_y_start + index * legend_y_spacing)
+            draw.rectangle([position, (position[0] + 20, position[1] + 20)], fill=color, outline=color)
+            draw.text((position[0] + 30, position[1]), text, fill=(255, 255, 255), font=font)
+            print(f'Drawn rectangle at {position} with color {color}')
+            print(f'Drawn text "{text}" at {(position[0] + 30, position[1])}')
+    
+    
 
 
