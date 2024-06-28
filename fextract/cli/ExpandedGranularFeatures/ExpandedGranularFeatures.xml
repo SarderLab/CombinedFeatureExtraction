@@ -75,6 +75,30 @@
       <channel>input</channel>
       <index>7</index>
     </integer>
+    <string>
+      <name>ignoreAnns</name>
+      <longflag>ignore_anns</longflag>
+      <label>Ignore Annotations (test run only)</label>
+      <description>Specify annotation names to ignore (spots and interstitium are automatically skipped, comma separated list)</description>
+      <default>""</default>
+      <index>8</index>
+    </string>
+    <boolean>
+      <name>returnXlsx</name>
+      <longflag>return_xlsx</longflag>
+      <label>Return Excel File(s) (test run only)</label>
+      <description>Whether or not to output excel files containing morphometric features (must also specify path)</description>
+      <default>0</default>
+      <index>9</index>
+    </boolean>
+    <boolean>
+      <name>replace_annotations</name>
+      <longflag>replace_annotations</longflag>
+      <label>Annotations with Feature Data</label>
+      <description>Replace current annotations with copies that contain feature values as metadata.</description>
+      <default>1</default>
+      <index>10</index>
+    </boolean>
   </parameters>
   <parameters advanced="true">
     <label>Girder API URL and Key</label>
@@ -93,33 +117,5 @@
       <description>A Girder token identifying a user session</description>
       <default></default>
     </string>
-    <string>
-      <name>ignoreAnns</name>
-      <longflag>ignore_anns</longflag>
-      <label>Ignore Annotations (test run only)</label>
-      <description>Specify annotation names to ignore (spots and interstitium are automatically skipped, comma separated list)</description>
-      <default>""</default>
-    </string>
-    <boolean>
-      <name>rename</name>
-      <longflag>re_name</longflag>
-      <label>Rename structures</label>
-      <description>Whether or not to rename structures to nicer names</description>
-      <default>1</default>
-    </boolean>
-    <boolean>
-      <name>returnXlsx</name>
-      <longflag>return_xlsx</longflag>
-      <label>Return Excel File(s) (test run only)</label>
-      <description>Whether or not to output excel files containing morphometric features (must also specify path)</description>
-      <default>0</default>
-    </boolean>
-    <boolean>
-      <name>replace_annotations</name>
-      <longflag>replace_annotations</longflag>
-      <label>Annotations with Feature Data</label>
-      <description>Replace current annotations with copies that contain feature values as metadata.</description>
-      <default>1</default>
-    </boolean>
   </parameters>
 </executable>
