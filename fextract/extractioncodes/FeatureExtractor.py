@@ -95,7 +95,9 @@ class FeatureExtractor:
 
         # Getting annotations
         annotations = self.gc.get(f'annotation/item/{self.slide_item_id}', parameters={'sort': 'updated'})
-        self.annotations = [annot for annot in annotations if annot['annotation']['name'].strip() in NAMES]
+        for annot in annotations:
+            annot['annotation']['name'] = annot['annotation']['name'].strip()
+        self.annotations = [annot for annot in annotations if annot['annotation']['name'] in NAMES]
         
         if not self.test_run:
             agg_feat_metadata = {}
