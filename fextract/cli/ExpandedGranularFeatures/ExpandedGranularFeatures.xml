@@ -78,7 +78,7 @@
     <string>
       <name>ignoreAnns</name>
       <longflag>ignore_anns</longflag>
-      <label>Ignore Annotations (test run only)</label>
+      <label>Ignore Annotations</label>
       <description>Specify annotation names to ignore (spots and interstitium are automatically skipped, comma separated list)</description>
       <default>""</default>
       <index>8</index>
@@ -86,8 +86,8 @@
     <boolean>
       <name>returnXlsx</name>
       <longflag>return_xlsx</longflag>
-      <label>Return Excel File(s) (test run only)</label>
-      <description>Whether or not to output excel files containing morphometric features (must also specify path)</description>
+      <label>Return Excel File(s)</label>
+      <description>Whether or not to output excel files containing extracted features</description>
       <default>0</default>
       <index>9</index>
     </boolean>

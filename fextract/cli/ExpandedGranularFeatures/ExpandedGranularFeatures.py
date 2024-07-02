@@ -75,6 +75,7 @@ def main(args):
     skip_structures = args.ignoreAnns.split(',')
     if not type(skip_structures)==list:
         skip_structures = [skip_structures]
+    skip_structures = [layer.strip() for layer in skip_structures]
 
     output_path = '/tmp/'
 
