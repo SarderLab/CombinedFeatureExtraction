@@ -135,7 +135,7 @@ def getExtendedClinicalFeatures(args):
         xlsx_path = os.path.join(output_dir, os.path.basename(svsfile).split('.')[0] +'_extended_clinical'+'.xlsx')
         workbook=xlsxwriter.Workbook(xlsx_path)
         worksheet1 = workbook.add_worksheet('Summary')
-        worksheet2 = workbook.add_worksheet('Interstitium')
+
         worksheet3 = workbook.add_worksheet('Glomeruli')
         worksheet4 = workbook.add_worksheet('Sclerosed glomeruli')
         worksheet5 = workbook.add_worksheet('Tubules')
@@ -216,7 +216,7 @@ def getExtendedClinicalFeatures(args):
         worksheet1.write(3,0,'Average glomerular radius:')
         worksheet1.write(4,0,'Std glomerular radius:')
 
-        worksheet1.write(0,1,0 if not len(glom_features) else len(glom_features)/pseudocortexarea)
+        worksheet1.write(0,1,0 if not pseudocortexarea else len(glom_features)/pseudocortexarea)
         worksheet1.write(1,1,0 if not len(glom_features) else np.mean(glom_features[:,0]))
         worksheet1.write(2,1,0 if not len(glom_features) else np.std(glom_features[:,0]))
         worksheet1.write(3,1,0 if not len(glom_features) else np.mean(glom_features[:,1]))
@@ -228,7 +228,7 @@ def getExtendedClinicalFeatures(args):
         worksheet1.write(8,0,'Average scl.glomerular radius:')
         worksheet1.write(9,0,'Std scl.glomerular radius:')
 
-        worksheet1.write(5,1,0 if not len(sglom_features) else len(sglom_features)/pseudocortexarea)
+        worksheet1.write(5,1,0 if not pseudocortexarea else len(sglom_features)/pseudocortexarea)
         worksheet1.write(6,1,0 if not len(sglom_features) else np.mean(sglom_features[:,0]))
         worksheet1.write(7,1,0 if not len(sglom_features) else np.std(sglom_features[:,0]))
         worksheet1.write(8,1,0 if not len(sglom_features) else np.mean(sglom_features[:,1]))
@@ -262,7 +262,7 @@ def getExtendedClinicalFeatures(args):
 
 
         worksheet1.write(19,0,'Cortical arterial(olar) density')
-        worksheet1.write(19,1,len(cortexarts)/pseudocortexarea)
+        worksheet1.write(19,1,0 if not pseudocortexarea else len(cortexarts)/pseudocortexarea)
         worksheet1.write(20,0,'Average lumen to wall ratio:')
         ltwr=np.array([i for i in art_features[:,4] if i is not None])
         worksheet1.write(20,1,np.mean(ltwr))
@@ -290,7 +290,7 @@ def getExtendedClinicalFeatures(args):
         if len(sglom_features)>0:
             cInterstitial_area-=np.sum(sglom_features[:,0])
         worksheet1.write(28,0,'Cortical interstitial density')
-        worksheet1.write(28,1,cInterstitial_area/pseudocortexarea)
+        worksheet1.write(28,1,0 if not pseudocortexarea else cInterstitial_area/pseudocortexarea)
         worksheet1.write(29,0,'Overall tubule density - count')
         worksheet1.write(29,1,len(tub_features)/total_tissue_area)
         worksheet1.write(29,0,'Total nephron density - count')
