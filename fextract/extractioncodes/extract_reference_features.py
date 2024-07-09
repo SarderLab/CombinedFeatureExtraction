@@ -182,23 +182,130 @@ def getExtendedClinicalFeatures(args):
         medullaarts=np.array([i for i in art_features if i[3]])
 
 
-        if pseudocortexarea>0:
-            cortex_glom_area=np.sum(np.array(glom_features)[:,0])
-            cortex_glom_density=float(cortex_glom_area)/float(pseudocortexarea)
-            cortex_tub_area=np.sum(cortextubs[:,0])
-            cortex_tub_density=float(cortex_tub_area)/float(pseudocortexarea)
-            cortex_art_area=np.sum(cortexarts[:,0])
-            cortex_art_density=float(cortex_art_area)/float(pseudocortexarea)
-            # downsample_cortex=get_downsample_cortex(args,all_contours['1'])
-            # exit()
-            # capillary_densities=Parallel(n_jobs=cores)(delayed(get_capillary_densities)(points,
-            #     args,args.min_size[4],cortex_path,medulla_path,wsi) for points in tqdm(all_contours['6'],colour='magenta',unit='Artery(-iole)'))
-        else:
-            cortex_glom_density=None
-            cortex_tub_density=None
-            cortex_art_density=None
-        if medullaarea>0 and len(medullatubs)>0:
+        if len(glom_features)>0:
+            if pseudocortexarea>0:
+                cortex_glom_area=np.sum(np.array(glom_features)[:,0])
+                cortex_glom_density=float(cortex_glom_area)/float(pseudocortexarea)
+                glom_density = len(glom_features)/pseudocortexarea            
+            else:
+                cortex_glom_density=None
+                glom_density = None
 
+            worksheet1.write(0,0,'Glomerular density - count:')
+            worksheet1.write(0,1,glom_density)
+            worksheet1.write(1,0,'Average glomerular area:')
+            worksheet1.write(1,1,np.mean(glom_features[:,0]))
+            worksheet1.write(2,0,'Std glomerular area:')
+            worksheet1.write(2,1,np.std(glom_features[:,0]))
+            worksheet1.write(3,0,'Average glomerular radius:')
+            worksheet1.write(3,1,np.mean(glom_features[:,1]))
+            worksheet1.write(4,0,'Std glomerular radius:')
+            worksheet1.write(4,1,np.std(glom_features[:,1]))
+        else:
+            worksheet1.write(0,0,'Glomerular density - count:')
+            worksheet1.write(0,1,0)
+            worksheet1.write(1,0,'Average glomerular area:')
+            worksheet1.write(1,1,0)
+            worksheet1.write(2,0,'Std glomerular area:')
+            worksheet1.write(2,1,0)
+            worksheet1.write(3,0,'Average glomerular radius:')
+            worksheet1.write(3,1,0)
+            worksheet1.write(4,0,'Average glomerular radius:')
+            worksheet1.write(4,1,0)
+            
+        if len(sglom_features)>0:
+            worksheet1.write(5,0,'Glomerulosclerosis density - count')
+            worksheet1.write(5,1,len(sglom_features)/pseudocortexarea)
+            worksheet1.write(6,0,'Average scl.glomerular area:')
+            worksheet1.write(6,1,np.mean(sglom_features[:,0]))
+            worksheet1.write(7,0,'Std scl.glomerular area:')
+            worksheet1.write(7,1,np.std(sglom_features[:,0]))
+            worksheet1.write(8,0,'Average scl.glomerular radius:')
+            worksheet1.write(8,1,np.mean(sglom_features[:,1]))
+            worksheet1.write(9,0,'Std scl.glomerular radius:')
+            worksheet1.write(9,1,np.std(sglom_features[:,1]))
+        else:
+            worksheet1.write(5,0,'Glomerulosclerosis density - count:')
+            worksheet1.write(5,1,0)
+            worksheet1.write(6,0,'Average scl.glomerular area:')
+            worksheet1.write(6,1,0)
+            worksheet1.write(7,0,'Std scl.glomerular area:')
+            worksheet1.write(7,1,0)
+            worksheet1.write(8,0,'Average scl.glomerular radius:')
+            worksheet1.write(8,1,0)
+            worksheet1.write(9,0,'Std scl.glomerular radius:')
+            worksheet1.write(9,1,0)
+
+        if len(cortextubs)>0:
+            if pseudocortexarea>0:
+                cortextubs=np.array(cortextubs)
+                worksheet1.write(10,0,'Cortical tubular density')
+                worksheet1.write(10,1,len(cortextubs)/pseudocortexarea)
+            else:
+                worksheet1.write(10,0,'Cortical tubular density')
+                worksheet1.write(10,1,0)
+
+            worksheet1.write(11,0,'Average cortical tubular area:')
+            worksheet1.write(11,1,np.mean(cortextubs[:,0]))
+            worksheet1.write(12,0,'Std cortical tubular area:')
+            worksheet1.write(12,1,np.std(cortextubs[:,0]))
+            worksheet1.write(13,0,'Average cortical tubular radius:')
+            worksheet1.write(13,1,np.mean(cortextubs[:,1]))
+            worksheet1.write(14,0,'Std cortical tubular radius:')
+            worksheet1.write(14,1,np.std(cortextubs[:,1]))
+        else:
+            worksheet1.write(11,0,'Average cortical tubular area:')
+            worksheet1.write(11,1,0)        
+            worksheet1.write(12,0,'Std cortical tubular area:')
+            worksheet1.write(12,1,0)
+            worksheet1.write(13,0,'Average cortical tubular radius:')
+            worksheet1.write(13,1,0)
+            worksheet1.write(14,0,'Std cortical tubular radius:')
+            worksheet1.write(14,1,0)
+ 
+        if len(medullatubs)>0:
+            worksheet1.write(15,0,'Average medullary tubular area:')
+            worksheet1.write(15,1,np.mean(medullatubs[:,0]))
+            worksheet1.write(16,0,'Std medullary tubular area:')
+            worksheet1.write(16,1,np.std(medullatubs[:,0]))
+            worksheet1.write(17,0,'Average medullary tubular radius:')
+            worksheet1.write(17,1,np.mean(medullatubs[:,1]))
+            worksheet1.write(18,0,'Std medullary tubular radius:')
+            worksheet1.write(18,1,np.std(medullatubs[:,1]))
+        else:
+            worksheet1.write(15,0,'Average medullary tubular area:')
+            worksheet1.write(15,1,0)
+            worksheet1.write(16,0,'Std medullary tubular area:')
+            worksheet1.write(16,1,0)
+            worksheet1.write(17,0,'Average medullary tubular radius:')
+            worksheet1.write(17,1,0)
+            worksheet1.write(18,0,'Std medullary tubular radius:')
+            worksheet1.write(18,1,0)
+
+        if pseudocortexarea>0:
+            worksheet1.write(19,0,'Cortical arterial(olar) density')
+            worksheet1.write(19,1,len(cortexarts)/pseudocortexarea)
+        else:
+            worksheet1.write(19,0,'Cortical arterial(olar) density')
+            worksheet1.write(19,1,0)
+        if len(art_features)>0:
+            worksheet1.write(20,0,'Average lumen to wall ratio:')
+            ltwr=np.array([i for i in art_features[:,4] if i is not None])
+            worksheet1.write(20,1,np.mean(ltwr))
+        else:
+            worksheet1.write(20,0,'Average lumen to wall ratio:')
+            worksheet1.write(20,1,0)
+
+        if pseudocortexarea>0 and len(cortextubs)>0 and len(cortexarts)>0:
+                cortex_tub_area=np.sum(cortextubs[:,0])
+                cortex_tub_density=float(cortex_tub_area)/float(pseudocortexarea)
+                cortex_art_area=np.sum(cortexarts[:,0])
+                cortex_art_density=float(cortex_art_area)/float(pseudocortexarea)
+        else:
+            cortex_tub_density=0
+            cortex_art_density=0
+
+        if medullaarea>0 and len(medullatubs)>0 and len(medullaarts)>0:
             medulla_tub_area=np.sum(medullatubs[:,0])
             if len(medullaarts)>0:
                 medulla_art_area=np.sum(medullaarts[:,0])
@@ -207,70 +314,16 @@ def getExtendedClinicalFeatures(args):
                 medulla_art_density=None
             medulla_tub_density=float(medulla_tub_area)/float(medullaarea)
         else:
-            medulla_tub_density=None
-            medulla_art_density=None
+            medulla_tub_density=0
+            medulla_art_density=0
 
-        worksheet1.write(0,0,'Glomerular density - count:')
-        worksheet1.write(0,1,len(glom_features)/pseudocortexarea)
-        worksheet1.write(1,0,'Average glomerular area:')
-        worksheet1.write(1,1,np.mean(glom_features[:,0]))
-        worksheet1.write(2,0,'Std glomerular area:')
-        worksheet1.write(2,1,np.std(glom_features[:,0]))
-        worksheet1.write(3,0,'Average glomerular radius:')
-        worksheet1.write(3,1,np.mean(glom_features[:,1]))
-        worksheet1.write(4,0,'Std glomerular radius:')
-        worksheet1.write(4,1,np.std(glom_features[:,1]))
-        worksheet1.write(5,0,'Glomerulosclerosis density - count')
-        worksheet1.write(6,0,'Average scl.glomerular area:')
-        worksheet1.write(7,0,'Std scl.glomerular area:')
-        worksheet1.write(8,0,'Average scl.glomerular radius:')
-        worksheet1.write(9,0,'Std scl.glomerular radius:')
-        if len(sglom_features)>0:
-            worksheet1.write(5,1,len(sglom_features)/pseudocortexarea)
-            worksheet1.write(6,1,np.mean(sglom_features[:,0]))
-            worksheet1.write(7,1,np.std(sglom_features[:,0]))
-            worksheet1.write(8,1,np.mean(sglom_features[:,1]))
-            worksheet1.write(9,1,np.std(sglom_features[:,1]))
+        if len(glom_features) + len(sglom_features)>0:
+            worksheet1.write(21,0,'Glomerulosclerosis ratio:')
+            worksheet1.write(21,1,float(len(sglom_features))/float(len(sglom_features)+len(glom_features)))
+        else:
+            worksheet1.write(21,0,'Glomerulosclerosis ratio:')
+            worksheet1.write(21,1,0)
 
-        worksheet1.write(10,0,'Cortical tubular density')
-
-        worksheet1.write(11,0,'Average cortical tubular area:')
-        worksheet1.write(12,0,'Std cortical tubular area:')
-        worksheet1.write(13,0,'Average cortical tubular radius:')
-        worksheet1.write(14,0,'Std cortical tubular radius:')
-
-        worksheet1.write(15,0,'Average medullary tubular area:')
-        worksheet1.write(16,0,'Std medullary tubular area:')
-        worksheet1.write(17,0,'Average medullary tubular radius:')
-        worksheet1.write(18,0,'Std medullary tubular radius:')
-        if pseudocortexarea>0:
-            cortextubs=np.array(cortextubs)
-            worksheet1.write(10,1,len(cortextubs)/pseudocortexarea)
-
-            worksheet1.write(11,1,np.mean(cortextubs[:,0]))
-            worksheet1.write(12,1,np.std(cortextubs[:,0]))
-            worksheet1.write(13,1,np.mean(cortextubs[:,1]))
-            worksheet1.write(14,1,np.std(cortextubs[:,1]))
-        if medullaarea>0:
-            if len(medullatubs)>0:
-                worksheet1.write(15,1,np.mean(medullatubs[:,0]))
-                worksheet1.write(16,1,np.std(medullatubs[:,0]))
-                worksheet1.write(17,1,np.mean(medullatubs[:,1]))
-                worksheet1.write(18,1,np.std(medullatubs[:,1]))
-            else:
-                worksheet1.write(15,1,0)
-                worksheet1.write(16,1,0)
-                worksheet1.write(17,1,0)
-                worksheet1.write(18,1,0)
-
-        worksheet1.write(19,0,'Cortical arterial(olar) density')
-        worksheet1.write(19,1,len(cortexarts)/pseudocortexarea)
-        worksheet1.write(20,0,'Average lumen to wall ratio:')
-        ltwr=np.array([i for i in art_features[:,4] if i is not None])
-        worksheet1.write(20,1,np.mean(ltwr))
-
-        worksheet1.write(21,0,'Glomerulosclerosis ratio:')
-        worksheet1.write(21,1,float(len(sglom_features))/float(len(sglom_features)+len(glom_features)))
         worksheet1.write(22,0,'Cortical glomerular density - area:')
         worksheet1.write(22,1,cortex_glom_density)
         worksheet1.write(23,0,'Cortical tubular density - area')
@@ -279,11 +332,16 @@ def getExtendedClinicalFeatures(args):
         worksheet1.write(24,1,cortex_art_density)
         worksheet1.write(25,0,'Medullary tubular density - area')
         worksheet1.write(25,1,medulla_tub_density)
-
         worksheet1.write(26,0,'Medullary arteriole density - area')
         worksheet1.write(26,1,medulla_art_density)
-        worksheet1.write(27,0,'Gloms/cortex tubules ratio:')
-        worksheet1.write(27,1,np.sum(glom_features[:,0])/np.sum(cortextubs[:,0]))
+
+        if len(glom_features)>0 and len(cortextubs)>0:
+            worksheet1.write(27,0,'Gloms/cortex tubules ratio:')
+            worksheet1.write(27,1,np.sum(glom_features[:,0])/np.sum(cortextubs[:,0]))
+        else:
+            worksheet1.write(27,0,'Gloms/cortex tubules ratio:')
+            worksheet1.write(27,1,0)
+
         cInterstitial_area=cortexarea-np.sum(cortextubs[:,0])-np.sum(cortexarts[:,0])-np.sum(glom_features[:,0])
         if len(medullatubs)>0:
             mInterstitial_area=medullaarea-np.sum(medullatubs[:,0])
@@ -291,8 +349,13 @@ def getExtendedClinicalFeatures(args):
             mInterstitial_area=0
         if len(sglom_features)>0:
             cInterstitial_area-=np.sum(sglom_features[:,0])
-        worksheet1.write(28,0,'Cortical interstitial density')
-        worksheet1.write(28,1,cInterstitial_area/pseudocortexarea)
+        
+        if pseudocortexarea>0:
+            worksheet1.write(28,0,'Cortical interstitial density')
+            worksheet1.write(28,1,cInterstitial_area/pseudocortexarea)
+        else:
+            worksheet1.write(28,0,'Cortical interstitial density')
+            worksheet1.write(28,1,0)
         worksheet1.write(29,0,'Overall tubule density - count')
         worksheet1.write(29,1,len(tub_features)/total_tissue_area)
         worksheet1.write(29,0,'Total nephron density - count')
@@ -300,6 +363,8 @@ def getExtendedClinicalFeatures(args):
         worksheet1.write(30,0,'Medullary interstitial density')
         if medullaarea>0:
             worksheet1.write(30,1,mInterstitial_area/medullaarea)
+        else:
+            worksheet1.write(30,1,0)
         worksheet1.write(31,0,'Cortical tubule count')
         worksheet1.write(31,1,len(cortextubs))
         worksheet1.write(32,0,'Cortical artery/arteriole count')
@@ -310,77 +375,71 @@ def getExtendedClinicalFeatures(args):
         worksheet1.write(34,1,len(sglom_features))
 
         
-        worksheet3.write(0,0,'x1')
-        worksheet3.write(0,1,'x2')
-        worksheet3.write(0,2,'y1')
-        worksheet3.write(0,3,'y2')
-
-        worksheet3.write(0,4,'Area (pixel^2)')
-        worksheet3.write(0,5,'Radius (pixel)')
-
-        for idx,glom in enumerate(glom_features):
-            worksheet3.write(idx+1,0,glom[4])
-            worksheet3.write(idx+1,1,glom[5])
-            worksheet3.write(idx+1,2,glom[6])
-            worksheet3.write(idx+1,3,glom[7])
-
-            worksheet3.write(idx+1,4,glom[0])
-            worksheet3.write(idx+1,5,glom[1])
+        if len(glom_features)>0:
+            worksheet3.write(0,0,'x1')
+            worksheet3.write(0,1,'x2')
+            worksheet3.write(0,2,'y1')
+            worksheet3.write(0,3,'y2')
+            worksheet3.write(0,4,'Area (pixel^2)')
+            worksheet3.write(0,5,'Radius (pixel)')
+            for idx,glom in enumerate(glom_features):
+                worksheet3.write(idx+1,0,glom[4])
+                worksheet3.write(idx+1,1,glom[5])
+                worksheet3.write(idx+1,2,glom[6])
+                worksheet3.write(idx+1,3,glom[7])
+                worksheet3.write(idx+1,4,glom[0])
+                worksheet3.write(idx+1,5,glom[1])
 
 
-        worksheet4.write(0,0,'x1')
-        worksheet4.write(0,1,'x2')
-        worksheet4.write(0,2,'y1')
-        worksheet4.write(0,3,'y2')
+        if len(sglom_features)>0:
+            worksheet4.write(0,0,'x1')
+            worksheet4.write(0,1,'x2')
+            worksheet4.write(0,2,'y1')
+            worksheet4.write(0,3,'y2')
+            worksheet4.write(0,4,'Area (pixel^2)')
+            worksheet4.write(0,5,'Radius (pixel)')
+            for idx,sglom in enumerate(sglom_features):
+                worksheet4.write(idx+1,0,sglom[4])
+                worksheet4.write(idx+1,1,sglom[5])
+                worksheet4.write(idx+1,2,sglom[6])
+                worksheet4.write(idx+1,3,sglom[7])
+                worksheet4.write(idx+1, 4,sglom[0])
+                worksheet4.write(idx+1, 5, sglom[1])
 
-        worksheet4.write(0,4,'Area (pixel^2)')
-        worksheet4.write(0,5,'Radius (pixel)')
+        if len(tub_features)>0:
+            worksheet5.write(0,0,'x1')
+            worksheet5.write(0,1,'x2')
+            worksheet5.write(0,2,'y1')
+            worksheet5.write(0,3,'y2')
+            worksheet5.write(0,4,'Area (pixel^2)')
+            worksheet5.write(0,5,'Radius (pixel)')
+            worksheet5.write(0,6,'In Medulla')
+            for idx,tub in enumerate(tub_features):
+                worksheet5.write(idx+1,0,tub[4])
+                worksheet5.write(idx+1,1,tub[5])
+                worksheet5.write(idx+1,2,tub[6])
+                worksheet5.write(idx+1,3,tub[7])
+                worksheet5.write(idx+1,4,tub[0])
+                worksheet5.write(idx+1,5,tub[1])
+                worksheet5.write(idx+1,6,tub[3])
 
-        for idx,sglom in enumerate(sglom_features):
-            worksheet4.write(idx+1,0,sglom[4])
-            worksheet4.write(idx+1,1,sglom[5])
-            worksheet4.write(idx+1,2,sglom[6])
-            worksheet4.write(idx+1,3,sglom[7])
+        if len(art_features)>0:
+            worksheet6.write(0,0,'x1')
+            worksheet6.write(0,1,'x2')
+            worksheet6.write(0,2,'y1')
+            worksheet6.write(0,3,'y2')
 
-            worksheet4.write(idx+1, 4,sglom[0])
-            worksheet4.write(idx+1, 5, sglom[1])
-
-        worksheet5.write(0,0,'x1')
-        worksheet5.write(0,1,'x2')
-        worksheet5.write(0,2,'y1')
-        worksheet5.write(0,3,'y2')
-
-        worksheet5.write(0,4,'Area (pixel^2)')
-        worksheet5.write(0,5,'Radius (pixel)')
-        worksheet5.write(0,6,'In Medulla')
-        for idx,tub in enumerate(tub_features):
-            worksheet5.write(idx+1,0,tub[4])
-            worksheet5.write(idx+1,1,tub[5])
-            worksheet5.write(idx+1,2,tub[6])
-            worksheet5.write(idx+1,3,tub[7])
-
-            worksheet5.write(idx+1,4,tub[0])
-            worksheet5.write(idx+1,5,tub[1])
-            worksheet5.write(idx+1,6,tub[3])
-
-        
-        worksheet6.write(0,0,'x1')
-        worksheet6.write(0,1,'x2')
-        worksheet6.write(0,2,'y1')
-        worksheet6.write(0,3,'y2')
-
-        worksheet6.write(0,4,'Area (pixel^2)')
-        worksheet6.write(0,5,'Radius (pixel)')
-        worksheet6.write(0,6,'Luminal ratio')
-        for idx,art in enumerate(art_features):
-            worksheet6.write(idx+1,0,art[5])
-            worksheet6.write(idx+1,1,art[6])
-            worksheet6.write(idx+1,2,art[7])
-            worksheet6.write(idx+1,3,art[8])
-
-            worksheet6.write(idx+1,4,art[0])
-            worksheet6.write(idx+1,5,art[1])
-            worksheet6.write(idx+1,6,art[4])
+            worksheet6.write(0,4,'Area (pixel^2)')
+            worksheet6.write(0,5,'Radius (pixel)')
+            worksheet6.write(0,6,'Luminal ratio')
+            for idx,art in enumerate(art_features):
+                worksheet6.write(idx+1,0,art[5])
+                worksheet6.write(idx+1,1,art[6])
+                worksheet6.write(idx+1,2,art[7])
+                worksheet6.write(idx+1,3,art[8])
+                worksheet6.write(idx+1,4,art[0])
+                worksheet6.write(idx+1,5,art[1])
+                worksheet6.write(idx+1,6,art[4])
 
         workbook.close()
 
@@ -392,10 +451,6 @@ def getExtendedClinicalFeatures(args):
 def points_to_features_glom(points,args,min_size,cortex,medulla):
     a=cv2.contourArea(points)
     if a>min_size:
-        # if cortex is not None:
-        #     containedcortex=any(cortex.contains_points(points))
-        # else:
-        #     containedcortex=False
         if medulla is not None:
             containedmedulla=any(medulla.contains_points(points))
         else:
@@ -406,17 +461,11 @@ def points_to_features_glom(points,args,min_size,cortex,medulla):
         points[:,1]-=yMin
         binary_mask=cv2.fillPoly(binary_mask,[points],1)
         dist=distance_transform_edt(binary_mask)
-
-
         return [a,np.max(dist),None,containedmedulla,yMin,yMax,xMin,xMax]
 
 def points_to_features_tub(points,args,min_size,cortex,medulla):
     a=cv2.contourArea(points)
     if a>min_size:
-        # if cortex is not None:
-        #     containedcortex=any(cortex.contains_points(points))
-        # else:
-        #     containedcortex=False
         if medulla is not None:
             containedmedulla=any(medulla.contains_points(points))
         else:
@@ -433,12 +482,9 @@ def points_to_features_tub(points,args,min_size,cortex,medulla):
 
 def points_to_features_art(points,args,min_size,cortex,medulla,wsi,MOD):
     a=cv2.contourArea(points)
-    resizeFlag=0
+    # resizeFlag=0
     if a>min_size:
-        # if cortex is not None:
-        #     containedcortex=any(cortex.contains_points(points))
-        # else:
-        #     containedcortex=False
+        
         if medulla is not None:
             containedmedulla=any(medulla.contains_points(points))
         else:
@@ -454,58 +500,17 @@ def points_to_features_art(points,args,min_size,cortex,medulla,wsi,MOD):
         binary_mask=cv2.fillPoly(binary_mask,[points],1)
 
         LAB=rgb2lab(image)
-        # HSV=rgb2hsv(image)
 
         LAB[:,:,0]/=100
 
-        # stain1,stain2,stain3=deconvolution(image,MOD)
-        #prevent divide by zero errors by adding very small nonzero
-        # stain2=np.invert(stain2)/255
-        # stain3=np.invert(stain3)
-        # WSsatscaling=np.divide(LAB[:,:,0],HSV[:,:,1]+0.000000001)
-        # WSsatscaling2=np.divide(LAB[:,:,0],stain2+0.000000001)
-        # WSseg=WSsatscaling2>3
-        # WSseg=LAB[:,:,0]>.65
-        # fig,ax=try_all_threshold(LAB[:,:,0],figsize=(10,8))
-        # plt.show()
-        # WSseg=LAB[:,:,0]>threshold_lcoal(LAB[:,:,0],tolerance=2)
-
         dist=distance_transform_edt(binary_mask)
-        # localThresh=rank.otsu(LAB[:,:,0],disk(5))
         distMax=np.max(dist)
-        # print(distMax)
-        # tim=threshold_local(grayImage,block_size=3,method='mean')
         WSseg=LAB[:,:,0]>.7
 
-        # WSseg=binary_fill_holes(WSseg)
-
-        # WSseg=binary_dilation(WSseg,disk(2))
         WSseg[WSseg!=binary_mask.astype('bool')]=0
         WSseg=binary_fill_holes(WSseg)
-        # WSseg=binary_opening(WSseg,disk(1))
-        # WSseg=binary_erosion(WSseg,disk(2))
 
         WSdist=distance_transform_edt(WSseg)
 
-        # plt.subplot(221)
-        # plt.imshow(image)
-        # plt.subplot(222)
-        # plt.imshow(WSseg)
-        # plt.subplot(223)
-        # plt.imshow(grayImage)
-        # plt.subplot(224)
-        # plt.imshow(image)
-        # plt.title(np.max(WSdist)/np.max(dist))
-        # plt.show()
-        # if resizeFlag:
-        #
-        #     return [a,distMax*2,containedcortex,containedmedulla,(np.max(WSdist)*2)/(distMax*2)]
-        # else:
         return [a,distMax,None,containedmedulla,np.max(WSdist)/distMax,yMin,yMax,xMin,xMax]
 
-
-
-# #     full_list.append(tubule_features)
-# # full_list= pd.concat(full_list)
-# # print(full_list)
-# # exit()
