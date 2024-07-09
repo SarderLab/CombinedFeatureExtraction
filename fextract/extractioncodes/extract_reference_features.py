@@ -215,35 +215,24 @@ def getExtendedClinicalFeatures(args):
         worksheet1.write(2,0,'Std glomerular area:')
         worksheet1.write(3,0,'Average glomerular radius:')
         worksheet1.write(4,0,'Std glomerular radius:')
-        if len(glom_features)>0:
-            worksheet1.write(0,1,len(glom_features)/pseudocortexarea)
-            worksheet1.write(1,1,np.mean(glom_features[:,0]))
-            worksheet1.write(2,1,np.std(glom_features[:,0]))
-            worksheet1.write(3,1,np.mean(glom_features[:,1]))
-            worksheet1.write(4,1,np.std(glom_features[:,1]))
-        else:
-            worksheet1.write(0,1,0)
-            worksheet1.write(1,1,0)
-            worksheet1.write(2,1,0)
-            worksheet1.write(3,1,0)
-            worksheet1.write(4,1,0)
+
+        worksheet1.write(0,1,0 if not len(glom_features) else len(glom_features)/pseudocortexarea)
+        worksheet1.write(1,1,0 if not len(glom_features) else np.mean(glom_features[:,0]))
+        worksheet1.write(2,1,0 if not len(glom_features) else np.std(glom_features[:,0]))
+        worksheet1.write(3,1,0 if not len(glom_features) else np.mean(glom_features[:,1]))
+        worksheet1.write(4,1,0 if not len(glom_features) else np.std(glom_features[:,1]))
+
         worksheet1.write(5,0,'Glomerulosclerosis density - count')
         worksheet1.write(6,0,'Average scl.glomerular area:')
         worksheet1.write(7,0,'Std scl.glomerular area:')
         worksheet1.write(8,0,'Average scl.glomerular radius:')
         worksheet1.write(9,0,'Std scl.glomerular radius:')
-        if len(sglom_features)>0:
-            worksheet1.write(5,1,len(sglom_features)/pseudocortexarea)
-            worksheet1.write(6,1,np.mean(sglom_features[:,0]))
-            worksheet1.write(7,1,np.std(sglom_features[:,0]))
-            worksheet1.write(8,1,np.mean(sglom_features[:,1]))
-            worksheet1.write(9,1,np.std(sglom_features[:,1]))
-        else:
-            worksheet1.write(5,1,0)
-            worksheet1.write(6,1,0)
-            worksheet1.write(7,1,0)
-            worksheet1.write(8,1,0)
-            worksheet1.write(9,1,0)
+
+        worksheet1.write(5,1,0 if not len(sglom_features) else len(sglom_features)/pseudocortexarea)
+        worksheet1.write(6,1,0 if not len(sglom_features) else np.mean(sglom_features[:,0]))
+        worksheet1.write(7,1,0 if not len(sglom_features) else np.std(sglom_features[:,0]))
+        worksheet1.write(8,1,0 if not len(sglom_features) else np.mean(sglom_features[:,1]))
+        worksheet1.write(9,1,0 if not len(sglom_features) else np.std(sglom_features[:,1]))
 
         worksheet1.write(10,0,'Cortical tubular density')
 
@@ -265,16 +254,12 @@ def getExtendedClinicalFeatures(args):
             worksheet1.write(13,1,np.mean(cortextubs[:,1]))
             worksheet1.write(14,1,np.std(cortextubs[:,1]))
         if medullaarea>0:
-            if len(medullatubs)>0:
-                worksheet1.write(15,1,np.mean(medullatubs[:,0]))
-                worksheet1.write(16,1,np.std(medullatubs[:,0]))
-                worksheet1.write(17,1,np.mean(medullatubs[:,1]))
-                worksheet1.write(18,1,np.std(medullatubs[:,1]))
-            else:
-                worksheet1.write(15,1,0)
-                worksheet1.write(16,1,0)
-                worksheet1.write(17,1,0)
-                worksheet1.write(18,1,0)
+
+            worksheet1.write(15,1,0 if not len(medullatubs) else np.mean(medullatubs[:,0]))
+            worksheet1.write(16,1,0 if not len(medullatubs) else np.std(medullatubs[:,0]))
+            worksheet1.write(17,1,0 if not len(medullatubs) else np.mean(medullatubs[:,1]))
+            worksheet1.write(18,1,0 if not len(medullatubs) else np.std(medullatubs[:,1]))
+
 
         worksheet1.write(19,0,'Cortical arterial(olar) density')
         worksheet1.write(19,1,len(cortexarts)/pseudocortexarea)
