@@ -317,7 +317,7 @@ def getExtendedClinicalFeatures(args):
             medulla_tub_density=0
             medulla_art_density=0
 
-        if len(glom_features) + len(sglom_features)>0:
+        if len(glom_features)>0 or len(sglom_features)>0:
             worksheet1.write(21,0,'Glomerulosclerosis ratio:')
             worksheet1.write(21,1,float(len(sglom_features))/float(len(sglom_features)+len(glom_features)))
         else:
