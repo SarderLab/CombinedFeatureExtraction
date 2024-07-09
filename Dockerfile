@@ -1,13 +1,12 @@
 FROM rocker/r-ubuntu:20.04
 
-LABEL com.nvidia.volumes.needed="nvidia_driver"
+
 
 LABEL maintainer="Sayat Mimar - Sarder Lab. <sayat.mimar@ufl.edu>"
 
 CMD echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! STARTING THE BUILD !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+
 
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends software-properties-common && \
