@@ -19,6 +19,7 @@ from joblib import Parallel, delayed
 from skimage.color import rgb2hsv
 
 from skimage.filters import *
+from datetime import datetime
 
 CHOP_THUMBNAIL_RESOLUTION = 16
 MIN_SIZE = [30,30,30,30,30,30]
@@ -384,8 +385,25 @@ def getExtendedClinicalFeatures(args):
 
         gc.uploadFileToItem(slide_item_id, xlsx_path, reference=None, mimeType=None, filename=None, progressCallback=None)
         print('Girder file uploaded!')
-
+        uploadFilesToUserFolder(gc, [xlsx_path], slide_item_id)
         print('Done.')
+
+def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
+    print('Uploading files to user folder')
+    
+    time_now = datetime.now()
+    plugin_name = 'cominedfe_reference'
+    time_stamp = time_now.strftime("%d_%m_%Y_%H_%M_%S")
+    getItemName = gc.getItem(slide_item_id).get('name').split('.')[0]
+    user_id = gc.get('/user/me').get('_id')
+    getListFolder = gc.listFolder(user_id, 'user', 'Private')
+    getPrivateFolder = next(getListFolder)
+    getPluginFolder = gc.loadOrCreateFolder(f'{plugin_name}', getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
+    getWorkFolder = gc.loadOrCreateFolder(f'{getItemName}_{time_stamp}', getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
+    for file in outpt_filenames:
+        gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
+    
+    print('uploading files to user folder done!')
 
 def points_to_features_glom(points,args,min_size,cortex,medulla):
     a=cv2.contourArea(points)

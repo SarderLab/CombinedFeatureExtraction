@@ -32,6 +32,7 @@ import sys
 
 import shutil
 from PIL import Image, ImageDraw, ImageFont
+from datetime import datetime
 
 NAMES = ['cortical_interstitium','medullary_interstitium','non_globally_sclerotic_glomeruli','globally_sclerotic_glomeruli','tubules','arteries/arterioles']
 # Define color coding
@@ -69,6 +70,7 @@ class FeatureExtractor:
         # Getting image information:
         self.image_info = self.gc.get(f'/item/{self.slide_item_id}/tiles')
         output_filenames=[]
+        output_filenames_user_folder=[]
         # Making feature extract list
         self.feature_extract_list = {} 
 
@@ -209,7 +211,9 @@ class FeatureExtractor:
                 print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
                 for path in output_filenames:
                     self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
-
+                # Uploading to user folder
+                self.uploadFilesToUserFolder(output_filenames)
+                
         else:
 
             # Randomly select a structure from all the annotations and run feature extraction just for that one.
@@ -275,10 +279,14 @@ class FeatureExtractor:
             with open(feature_path,'w') as f:
                 json.dump(test_features,f)
                 f.close()
-
+            # add to output_filenames for user folder      
+            output_filenames_user_folder.extend(image_path, feature_path)
             # Uploading to item
             self.gc.uploadFileToItem(self.slide_item_id,image_path,reference=None,mimeType=None,filename=None,progressCallback=None)
             self.gc.uploadFileToItem(self.slide_item_id,feature_path,reference=None,mimeType=None,filename=None,progressCallback=None)
+            
+            # Uploading to user folder
+            self.uploadFilesToUserFolder(output_filenames_user_folder)
 
             print('Done with test run!')
             print('Look in the "Files" section of the image you ran this on to see the test outputs')
@@ -286,7 +294,23 @@ class FeatureExtractor:
             print(f'/{chosen_ann}_{chosen_structure}_image.png')
             print(f'/{chosen_ann}_{chosen_structure}_features.json')
 
-
+    def uploadFilesToUserFolder(self, outpt_filenames):
+        print('Uploading files to user folder')
+        
+        time_now = datetime.now()
+        plugin_name = 'cominedfe_features'
+        time_stamp = time_now.strftime("%d_%m_%Y_%H_%M_%S")
+        getItemName = self.gc.getItem(self.slide_item_id).get('name').split('.')[0]
+        user_id = self.gc.get('/user/me').get('_id')
+        getListFolder = self.gc.listFolder(user_id, 'user', 'Private')
+        getPrivateFolder = next(getListFolder)
+        getPluginFolder = self.gc.loadOrCreateFolder(f'{plugin_name}', getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
+        getWorkFolder = self.gc.loadOrCreateFolder(f'{getItemName}_{time_stamp}', getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
+        for file in outpt_filenames:
+            self.gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
+        
+        print('uploading files to user folder done!')
+    
     def grab_image_and_mask(self,coordinates):
 
         coordinates = np.squeeze(np.array(coordinates))
