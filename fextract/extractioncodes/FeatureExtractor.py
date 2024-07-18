@@ -296,19 +296,20 @@ class FeatureExtractor:
 
     def uploadFilesToUserFolder(self, outpt_filenames):
         print('Uploading files to user folder')
-        
-        time_now = datetime.now()
-        plugin_name = 'cominedfe_features'
-        time_stamp = time_now.strftime("%d_%m_%Y_%H_%M_%S")
-        getItemName = self.gc.getItem(self.slide_item_id).get('name').split('.')[0]
-        user_id = self.gc.get('/user/me').get('_id')
-        getListFolder = self.gc.listFolder(user_id, 'user', 'Private')
-        getPrivateFolder = next(getListFolder)
-        getPluginFolder = self.gc.loadOrCreateFolder(f'{plugin_name}', getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
-        getWorkFolder = self.gc.loadOrCreateFolder(f'{getItemName}_{time_stamp}', getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
-        for file in outpt_filenames:
-            self.gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
-        
+        try:
+            time_now = datetime.now()
+            plugin_name = 'cominedfe_features'
+            time_stamp = time_now.strftime("%d_%m_%Y_%H_%M_%S")
+            getItemName = self.gc.getItem(self.slide_item_id).get('name').split('.')[0]
+            user_id = self.gc.get('/user/me').get('_id')
+            getListFolder = self.gc.listFolder(user_id, 'user', 'Private')
+            getPrivateFolder = next(getListFolder)
+            getPluginFolder = self.gc.loadOrCreateFolder(f'{plugin_name}', getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
+            getWorkFolder = self.gc.loadOrCreateFolder(f'{getItemName}_{time_stamp}', getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
+            for file in outpt_filenames:
+                self.gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
+        except Exception as e:
+            print(f'Error uploading files to user folder: {e}')        
         print('uploading files to user folder done!')
     
     def grab_image_and_mask(self,coordinates):

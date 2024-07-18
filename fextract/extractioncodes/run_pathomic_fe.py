@@ -117,18 +117,20 @@ def getPathomicFeatures(args):
 
 def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
     print('Uploading files to user folder')
-
-    time_now = datetime.now()
-    plugin_name = 'cominedfe_pathomic'
-    time_stamp = time_now.strftime("%d_%m_%Y_%H_%M_%S")
-    getItemName = gc.getItem(slide_item_id).get('name').split('.')[0]
-    user_id = gc.get('/user/me').get('_id')
-    getListFolder = gc.listFolder(user_id, 'user', 'Private')
-    getPrivateFolder = next(getListFolder)
-    getPluginFolder = gc.loadOrCreateFolder(f'{plugin_name}', getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
-    getWorkFolder = gc.loadOrCreateFolder(f'{getItemName}_{time_stamp}', getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
-    for file in outpt_filenames:
-        gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
-
+    try:
+        time_now = datetime.now()
+        plugin_name = 'cominedfe_pathomic'
+        time_stamp = time_now.strftime("%d_%m_%Y_%H_%M_%S")
+        getItemName = gc.getItem(slide_item_id).get('name').split('.')[0]
+        user_id = gc.get('/user/me').get('_id')
+        getListFolder = gc.listFolder(user_id, 'user', 'Private')
+        getPrivateFolder = next(getListFolder)
+        getPluginFolder = gc.loadOrCreateFolder(f'{plugin_name}', getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
+        getWorkFolder = gc.loadOrCreateFolder(f'{getItemName}_{time_stamp}', getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
+        for file in outpt_filenames:
+            gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
+    except Exception as e:
+        print('Error in uploading files to user folder:', e)
+    
     print('uploading files to user folder done!')
 
