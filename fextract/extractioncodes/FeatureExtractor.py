@@ -293,17 +293,27 @@ class FeatureExtractor:
 
     def uploadFilesToUserFolder(self, outpt_filenames):
         print('Uploading files to user folder')
+        if(len(outpt_filenames)==0):
+            print('No files to upload')
+            return
         try:
             time_now = datetime.now()
             plugin_name = 'cominedfe_features'
             time_stamp = time_now.strftime("%m_%d_%Y__%H_%M_%S")
             getItemName = self.gc.getItem(self.slide_item_id).get('name').split('.')[0]
+            print(f'getItemName: {getItemName}')
             user_id = self.gc.get('/user/me').get('_id')
+            print(f'user_id: {user_id}')
             getListFolder = self.gc.listFolder(user_id, 'user', 'Private')
+            print(f'getListFolder: {getListFolder}')
             getPrivateFolder = next(getListFolder)
+            print(f'getPrivateFolder: {getPrivateFolder}')
             getSlideFolder = self.gc.loadOrCreateFolder(getItemName, getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
+            print(f'getSlideFolder: {getSlideFolder}')
             getPluginFolder = self.gc.loadOrCreateFolder(plugin_name, getSlideFolder.get('_id'), getSlideFolder.get('_modelType'))
+            print(f'getPluginFolder: {getPluginFolder}')
             getWorkFolder = self.gc.loadOrCreateFolder(time_stamp, getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
+            print(f'getWorkFolder: {getWorkFolder}')
             for file in outpt_filenames:
                 self.gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
         except Exception as e:

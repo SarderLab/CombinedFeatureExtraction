@@ -390,17 +390,26 @@ def getExtendedClinicalFeatures(args):
 
 def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
     print('Uploading files to user folder')
+    if(len(outpt_filenames)==0 or slide_item_id is None):
+        print('No files to upload or item id not provided')
+        return
     try:
         time_now = datetime.now()
         plugin_name = 'cominedfe_extended_clinical'
         time_stamp = time_now.strftime("%m_%d_%Y__%H_%M_%S")
         getItemName = gc.getItem(slide_item_id).get('name').split('.')[0]
+        print(getItemName, 'getItemName extended_clinical')
         user_id = gc.get('/user/me').get('_id')
         getListFolder = gc.listFolder(user_id, 'user', 'Private')
+        print(getListFolder, 'getListFolder extended_clinical')
         getPrivateFolder = next(getListFolder)
+        print(getPrivateFolder, 'getPrivateFolder extended_clinical')
         getSlideFolder = gc.loadOrCreateFolder(getItemName, getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
+        print(getSlideFolder, 'getSlideFolder extended_clinical')
         getPluginFolder = gc.loadOrCreateFolder(plugin_name, getSlideFolder.get('_id'), getSlideFolder.get('_modelType'))
+        print(getPluginFolder, 'getPluginFolder extended_clinical')
         getWorkFolder = gc.loadOrCreateFolder(time_stamp, getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
+        print(getWorkFolder, 'getWorkFolder extended_clinical')
         for file in outpt_filenames:
             gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
     except Exception as e:
