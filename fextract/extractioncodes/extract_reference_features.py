@@ -392,7 +392,7 @@ def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
     print('Uploading files to user folder')
     
     time_now = datetime.now()
-    plugin_name = 'cominedfe_reference'
+    plugin_name = 'cominedfe_extended_clinical'
     time_stamp = time_now.strftime("%d_%m_%Y_%H_%M_%S")
     getItemName = gc.getItem(slide_item_id).get('name').split('.')[0]
     user_id = gc.get('/user/me').get('_id')
