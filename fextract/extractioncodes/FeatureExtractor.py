@@ -197,10 +197,10 @@ class FeatureExtractor:
                             continue
             
             # Putting metadata
-            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
+            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',data={'metadata':json.dumps(agg_feat_metadata)})
 
             # Putting sub-compartment segmentation parameters to item metadata
-            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps({'Sub-Compartment Parameters': self.sub_seg_params})})
+            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',data={'metadata':json.dumps({'Sub-Compartment Parameters': self.sub_seg_params})})
 
             # Posting updated annotations to slide
             if self.replace_annotations:
