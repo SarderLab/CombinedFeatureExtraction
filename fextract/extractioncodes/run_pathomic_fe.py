@@ -117,6 +117,7 @@ def getPathomicFeatures(args):
 
 def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
     print('Uploading files to user folder')
+    print('outpt_filenames:', outpt_filenames, 'slide item ',slide_item_id)
     if(len(outpt_filenames)==0 or slide_item_id is None):
         print('No files to upload or slide item id not provided')
         return

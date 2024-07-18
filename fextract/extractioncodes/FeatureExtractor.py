@@ -293,6 +293,7 @@ class FeatureExtractor:
 
     def uploadFilesToUserFolder(self, outpt_filenames):
         print('Uploading files to user folder')
+        print('outpt_filenames:', outpt_filenames)
         if(len(outpt_filenames)==0):
             print('No files to upload')
             return
