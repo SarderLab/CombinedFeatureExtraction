@@ -127,9 +127,9 @@ def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
         print('No files to upload or slide item id not provided')
         return
     try:
-        time_now = datetime.now()
+        time_now = datetime.now().astimezone()
         plugin_name = 'CombinedFE_Pathomic'
-        time_stamp = time_now.strftime("%m_%d_%Y__%H_%M_%S")
+        time_stamp = time_now.strftime("%m_%d_%Y__%H:%M:%S")
         getItemName = gc.getItem(slide_item_id).get('name').split('.')[0]
         getListFolder = gc.listFolder(user_id, 'user', 'Private')
         getPrivateFolder = next(getListFolder)
