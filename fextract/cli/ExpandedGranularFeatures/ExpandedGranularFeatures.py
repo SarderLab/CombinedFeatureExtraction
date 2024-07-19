@@ -30,8 +30,12 @@ def main(args):
     file_name = file_info['name']
     print(f'Running on: {file_name}')
 
-    # mounted_path = '{}/{}'.format('/mnt/girder_worker', os.listdir('/mnt/girder_worker')[0])
-    mounted_path = os.getenv('TMPDIR')
+    if os.path.exists('/mnt/girder_worker'):
+        print('Using /mnt/girder_worker as mounted path')
+        mounted_path = '{}/{}'.format('/mnt/girder_worker', os.listdir('/mnt/girder_worker')[0])
+    else:
+        print('Using /tmp/ as mounted path')
+        mounted_path = os.getenv('TMPDIR')
     file_path = '{}/{}'.format(mounted_path,file_name)
     gc.downloadFile(file_id, file_path)
 
