@@ -117,28 +117,25 @@ def getPathomicFeatures(args):
 
 def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
     print('Uploading files to user folder')
-    print('outpt_filenames:', outpt_filenames, 'slide item ',slide_item_id)
+    user = gc.get('/user/me')
+    if user is None:
+        print('getting user from token')
+        user_id = gc.get('/token/current').get('userId')
+    else:
+        user_id = user.get('_id')
     if(len(outpt_filenames)==0 or slide_item_id is None):
         print('No files to upload or slide item id not provided')
         return
     try:
         time_now = datetime.now()
-        plugin_name = 'cominedfe_pathomic'
+        plugin_name = 'CombinedFE_Pathomic'
         time_stamp = time_now.strftime("%m_%d_%Y__%H_%M_%S")
         getItemName = gc.getItem(slide_item_id).get('name').split('.')[0]
-        print('pathomic _ Item name: ', getItemName)
-        user_id = gc.get('/user/me').get('_id')
-        print('pathomic_user_id:', user_id)
         getListFolder = gc.listFolder(user_id, 'user', 'Private')
-        print('pathomic_getListFolder:', getListFolder)
         getPrivateFolder = next(getListFolder)
-        print('pathomic_getPrivateFolder:', getPrivateFolder)
         getSlideFolder = gc.loadOrCreateFolder(getItemName, getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
-        print('pathomic_getSlideFolder:', getSlideFolder)
         getPluginFolder = gc.loadOrCreateFolder(plugin_name, getSlideFolder.get('_id'), getSlideFolder.get('_modelType'))
-        print('pathomic_getPluginFolder:', getPluginFolder)
         getWorkFolder = gc.loadOrCreateFolder(time_stamp, getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
-        print('pathomic_getWorkFolder:', getWorkFolder)
         for file in outpt_filenames:
             gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
     except Exception as e:
