@@ -1,4 +1,5 @@
 import os, cv2
+from fextract.extractioncodes.upload_assetstore_files import uploadFilesToOriginalFolder
 import numpy as np
 
 import lxml.etree as ET
@@ -20,6 +21,7 @@ from skimage.color import rgb2hsv
 
 from skimage.filters import *
 from datetime import datetime
+import girder_client
 
 CHOP_THUMBNAIL_RESOLUTION = 16
 MIN_SIZE = [30,30,30,30,30,30]
@@ -28,7 +30,6 @@ def getExtendedClinicalFeatures(args):
     # assert args.target is not None, 'Directory of xmls must be specified, use --target /path/to/files.xml'
     # assert args.wsis is not None, 'Directory of WSIs must be specified, use --wsis /path/to/wsis'
   
-    import girder_client
     gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
     gc.setToken(args.girderToken)
 
@@ -385,36 +386,9 @@ def getExtendedClinicalFeatures(args):
 
         gc.uploadFileToItem(slide_item_id, xlsx_path, reference=None, mimeType=None, filename=None, progressCallback=None)
         print('Girder file uploaded!')
-        uploadFilesToUserFolder(gc, [xlsx_path], slide_item_id)
+        # Uploading to user folder
+        uploadFilesToOriginalFolder(gc, [xlsx_path], slide_item_id, 'CombinedFE_ExtendedClinical', args.girderApiUrl)
         print('Done.')
-
-def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
-    print('Uploading files to user folder')
-    user = gc.get('/user/me')
-    if user is None:
-        print('getting userId from token')
-        user_id = gc.get('/token/current').get('userId')
-    else:
-        user_id = user.get('_id')    
-    if(len(outpt_filenames)==0 or slide_item_id is None):
-        print('No files to upload or item id not provided')
-        return
-    
-    try:
-        time_now = datetime.now().astimezone()
-        plugin_name = 'CombinedFE_ExtendedClinical'
-        time_stamp = time_now.strftime("%m_%d_%Y__%H:%M:%S")
-        getItemName = gc.getItem(slide_item_id).get('name').split('.')[0]
-        getListFolder = gc.listFolder(user_id, 'user', 'Private')
-        getPrivateFolder = next(getListFolder)
-        getSlideFolder = gc.loadOrCreateFolder(getItemName, getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
-        getPluginFolder = gc.loadOrCreateFolder(plugin_name, getSlideFolder.get('_id'), getSlideFolder.get('_modelType'))
-        getWorkFolder = gc.loadOrCreateFolder(time_stamp, getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
-        for file in outpt_filenames:
-            gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
-    except Exception as e:
-        print('Error uploading files to user folder:', e)    
-    print('uploading files to user folder done!')
 
 def points_to_features_glom(points,args,min_size,cortex,medulla):
     a=cv2.contourArea(points)

@@ -5,6 +5,7 @@ Morphometric feature extraction features for sub-compartments within segmented F
 
 """
 
+from fextract.extractioncodes.upload_assetstore_files import uploadFilesToOriginalFolder
 import numpy as np
 import cv2
 from skimage.feature import graycomatrix, graycoprops
@@ -212,7 +213,7 @@ class FeatureExtractor:
                 for path in output_filenames:
                     self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
                 # Uploading to user folder
-                self.uploadFilesToUserFolder(output_filenames)
+                uploadFilesToOriginalFolder(self.gc, output_filenames, self.slide_item_id, 'CombinedFE_ExpandedGranular', self.gc.urlBase)
                 
         else:
 
@@ -291,33 +292,7 @@ class FeatureExtractor:
             print(f'/{chosen_ann}_{chosen_structure}_image.png')
             print(f'/{chosen_ann}_{chosen_structure}_features.json')
 
-    def uploadFilesToUserFolder(self, outpt_filenames):
-        print('Uploading files to user folder')
-        user = self.gc.get('/user/me')
-        if user is None:
-            print('getting userId from token')
-            user_id = self.gc.get('/token/current').get('userId')
-        else:
-            user_id = user.get('_id')    
-        if(len(outpt_filenames)==0):
-            print('No files to upload')
-            return
-        try:
-            time_now = datetime.now().astimezone()
-            plugin_name = 'CombinedFE_ExpandedGranular'
-            time_stamp = time_now.strftime("%m_%d_%Y__%H:%M:%S")
-            getItemName = self.gc.getItem(self.slide_item_id).get('name').split('.')[0]
-            getListFolder = self.gc.listFolder(user_id, 'user', 'Private')
-            getPrivateFolder = next(getListFolder)
-            getSlideFolder = self.gc.loadOrCreateFolder(getItemName, getPrivateFolder.get('_id'), getPrivateFolder.get('_modelType'))
-            getPluginFolder = self.gc.loadOrCreateFolder(plugin_name, getSlideFolder.get('_id'), getSlideFolder.get('_modelType'))
-            getWorkFolder = self.gc.loadOrCreateFolder(time_stamp, getPluginFolder.get('_id'), getPluginFolder.get('_modelType'))
-            for file in outpt_filenames:
-                self.gc.uploadFileToFolder(getWorkFolder.get('_id'), file, reference=None, mimeType=None, filename=None, progressCallback=None)
-        except Exception as e:
-            print(f'Error uploading files to user folder: {e}')        
-        print('uploading files to user folder done!')
-    
+        
     def grab_image_and_mask(self,coordinates):
 
         coordinates = np.squeeze(np.array(coordinates))

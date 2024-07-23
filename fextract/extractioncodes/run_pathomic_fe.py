@@ -1,4 +1,5 @@
 import sys
+from fextract.extractioncodes.upload_assetstore_files import uploadFilesToOriginalFolder
 import os, girder_client
 import numpy as np
 from tqdm import tqdm
@@ -112,7 +113,7 @@ def getPathomicFeatures(args):
             df.to_excel(writer, index=False, sheet_name=compart_names[idx])
     
     gc.uploadFileToItem(slide_item_id, xlsx_path, reference=None, mimeType=None, filename=None, progressCallback=None)
-    uploadFilesToUserFolder(gc, [xlsx_path], slide_item_id)
+    uploadFilesToOriginalFolder(gc, [xlsx_path], slide_item_id, 'CombinedFE_Pathomic', args.girderApiUrl)
     print('Girder file uploaded!')
 
 def uploadFilesToUserFolder(gc, outpt_filenames, slide_item_id):
