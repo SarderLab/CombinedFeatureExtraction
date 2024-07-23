@@ -4,13 +4,13 @@ import girder_client
 import shutil
 
 
-def uploadFilesToOriginalFolder(gc, outpt_filenames, slide_item_id, plugin_name, girderApiUrl):
+def uploadFilesToOriginalFolder(gc, output_filenames, slide_item_id, plugin_name, girderApiUrl):
     print('Uploading files to user folder')
     # Get user id
     workPath = createWorkPath(gc, slide_item_id, plugin_name, girderApiUrl)
     user_id = getUserId(gc)
     # Check if there are files to upload
-    if (len(outpt_filenames) == 0):
+    if (len(output_filenames) == 0):
         print('No files to upload')
         return
     elif (workPath is None):
@@ -21,7 +21,7 @@ def uploadFilesToOriginalFolder(gc, outpt_filenames, slide_item_id, plugin_name,
         # Create the directory if it does not exist
         os.path.exists(workPath) or os.makedirs(workPath, mode=0o775)
         # Add files to the time stamp folder
-        for file in outpt_filenames:
+        for file in output_filenames:
             try:
                 shutil.copy2(file, workPath)
             except Exception as e:
