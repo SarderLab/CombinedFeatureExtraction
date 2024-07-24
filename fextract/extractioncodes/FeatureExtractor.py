@@ -71,7 +71,6 @@ class FeatureExtractor:
         # Getting image information:
         self.image_info = self.gc.get(f'/item/{self.slide_item_id}/tiles')
         output_filenames=[]
-        output_filenames_user_folder=[]
         # Making feature extract list
         self.feature_extract_list = {} 
 
@@ -280,8 +279,6 @@ class FeatureExtractor:
             with open(feature_path,'w') as f:
                 json.dump(test_features,f)
                 f.close()
-            # add to output_filenames for user folder      
-            output_filenames_user_folder.extend(image_path, feature_path)
             # Uploading to item
             self.gc.uploadFileToItem(self.slide_item_id,image_path,reference=None,mimeType=None,filename=None,progressCallback=None)
             self.gc.uploadFileToItem(self.slide_item_id,feature_path,reference=None,mimeType=None,filename=None,progressCallback=None)

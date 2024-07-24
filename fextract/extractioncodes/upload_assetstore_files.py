@@ -38,6 +38,9 @@ def createWorkPath(gc, slideItemId, pluginName, girderApiUrl):
         if importPathDirectory is None:
             print('No import path directory found')
             return
+        elif os.path.isfile(importPathDirectory): 
+            print('Import path directory is a file')
+            importPathDirectory = os.path.dirname(importPathDirectory)        
         time_now = datetime.now().astimezone()
         time_stamp = time_now.strftime("%m_%d_%Y__%H:%M:%S")
         getItemName = gc.getItem(slideItemId).get('name').split('.')[0]
@@ -53,7 +56,7 @@ def getAssetstoreImportPath(slideItemId, girderApiUrl):
     try:
         api_key=os.getenv('GIRDER_API_KEY', 'lrn6ZVgCdWuHWOhXDpi1nlDC3aUflbEnoik3GEfW')
         # Start admin instance
-        print(f'Getting api_key from env status is {os.getenv('GIRDER_API_KEY') is not None}')
+        print(f'Getting api_key from env status is {api_key is not None}')
         gc_assetstore = girder_client.GirderClient(apiUrl=girderApiUrl)
         gc_assetstore.authenticate(apiKey=api_key)
         # Get the folder id for the slide item
