@@ -20,6 +20,8 @@ def uploadFilesToOriginalFolder(gc, output_filenames, slide_item_id, plugin_name
     try:
         # Create the directory if it does not exist
         os.path.exists(workPath) or os.makedirs(workPath, mode=0o775)
+        # change the permission of the directory
+        os.chmod(workPath, 0o775)
         # Add files to the time stamp folder
         for file in output_filenames:
             try:
@@ -62,12 +64,27 @@ def getAssetstoreImportPath(slideItemId, girderApiUrl):
         # Get the folder id for the slide item
         getItemInfo = gc_assetstore.get(f'/item/{slideItemId}')
         getFolderId = getItemInfo.get('folderId')
-        getAssetstoreImports = gc_assetstore.get('/assetstore/all_imports')
+        getAssetstoreImports = gc_assetstore.get('/assetstore/all_imports', parameters={'limit': 0})
         # Get the import path for the folder id
         for eachImport in getAssetstoreImports:
             if (eachImport.get('params').get('destinationId') == getFolderId):
-                return eachImport.get('params').get('importPath')
-
+                assetStoreFileID = eachImport.get('_id')
+                importPath = eachImport.get('params').get('importPath')
+        # check if itemID is imported from the assetstore
+        print(f'Assetstore id is {assetStoreFileID}')
+        print(f'Import path is {importPath}')
+        if assetStoreFileID:
+            try:
+                assetStoreFileRecord = gc_assetstore.get(f'/assetstore/import/{assetStoreFileID}')
+                if assetStoreFileRecord:
+                    print('Assetstore import item found')
+                    return importPath
+            except Exception as e:
+                print(f'Item not imported: {e}')
+                return None
+        else:
+            print('No assetstore id found')
+            return None        
     except Exception as e:
         print(f'Error getting assetstore import path: {e}')
         return None
