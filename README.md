@@ -3,7 +3,7 @@
 
 ## Introduction
 
-Combined Feature Extraction is a collection of 3 pipelines for extracting and quantifying morpometrics from segmented masks. It contains the following [Digital Slide Archive](https://athena.rc.ufl.edu/) (DSA) plugins developed by [CMI Lab](https://cmilab.nephrology.medicine.ufl.edu/) at the University florida:
+Combined Feature Extraction is a collection of 3 pipelines for extracting and quantifying morpometrics from segmented masks. It contains the following [Digital Slide Archive](https://athena.rc.ufl.edu/) (DSA) plugins developed by [CMI Lab](https://cmilab.nephrology.medicine.ufl.edu/) at the University Florida:
 
 - ClassicalFeatures
     - Pathomic
