@@ -21,12 +21,12 @@ from skimage.color import rgb2hsv
 from skimage.filters import *
 
 CHOP_THUMBNAIL_RESOLUTION = 16
-MIN_SIZE = [30,30,30,30,30,30]
+
 def getExtendedClinicalFeatures(args):
 
     # assert args.target is not None, 'Directory of xmls must be specified, use --target /path/to/files.xml'
     # assert args.wsis is not None, 'Directory of WSIs must be specified, use --wsis /path/to/wsis'
-  
+    MIN_SIZE = [30,30,int(args.glom_min_area),int(args.sglom_min_area),int(args.tubule_min_area),int(args.artery_min_area)]
     import girder_client
     gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
     gc.setToken(args.girderToken)
@@ -66,7 +66,6 @@ def getExtendedClinicalFeatures(args):
         cortexcodes=[]
         medullacontour=[]
         medullacodes=[]
-        cortexarea=0
         medullaarea=0
 
         slide=TiffSlide(svsfile)
@@ -109,7 +108,6 @@ def getExtendedClinicalFeatures(args):
   
         for contour in all_contours['1']:
             cortexcontour.extend(contour)
-            cortexarea+=cv2.contourArea(contour)
             cortexcodes.extend([path.Path.MOVETO])
             for i in range(1,np.shape(contour)[0]-1):
                 cortexcodes.extend([path.Path.LINETO])
@@ -282,7 +280,7 @@ def getExtendedClinicalFeatures(args):
         worksheet1.write(26,1,medulla_art_density)
         worksheet1.write(27,0,'Gloms/cortex tubules ratio:')
         worksheet1.write(27,1,np.sum(0 if not len(glom_features) and not len(glom_features) else glom_features[:,0])/np.sum(cortextubs[:,0]))
-        cInterstitial_area=cortexarea-np.sum(0 if not len(cortextubs) else cortextubs[:,0])-np.sum(0 if not len(cortexarts) else cortexarts[:,0])-np.sum(0 if not len(glom_features) else glom_features[:,0])
+        cInterstitial_area=pseudocortexarea-np.sum(0 if not len(cortextubs) else cortextubs[:,0])-np.sum(0 if not len(cortexarts) else cortexarts[:,0])-np.sum(0 if not len(glom_features) else glom_features[:,0])
         if len(medullatubs)>0:
             mInterstitial_area=medullaarea-np.sum(medullatubs[:,0])
         else:

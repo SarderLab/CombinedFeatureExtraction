@@ -29,6 +29,38 @@
     </image>
   </parameters>
   <parameters advanced="true">
+   <label>Thresholds</label>
+   <description>Thresholds for feature extraction</description>
+   <integer>
+     <name>glom_min_area</name>
+     <longflag>glom-min-area</longflag>
+     <label>Glomeruli Minimum Area</label>
+     <description>Minimum area threshold (pixels) for normal glomeruli</description>
+     <default>24000</default>
+   </integer>
+   <integer>
+     <name>sglom_min_area</name>
+     <longflag>sglom-min-area</longflag>
+     <label>Sclerosed Glomeruli Minimum Area</label>
+     <description>Minimum area threshold (pixels) for sclerosed glomeruli</description>
+     <default>24000</default>
+   </integer>
+   <integer>
+     <name>tubule_min_area</name>
+     <longflag>tubule-min-area</longflag>
+     <label>Tubules Minimum Area</label>
+     <description>Minimum area threshold (pixels) for tubules</description>
+     <default>10</default>
+   </integer>
+   <integer>
+     <name>artery_min_area</name>
+     <longflag>artery-min-area</longflag>
+     <label>Arteries/Arterioles Minimum Area</label>
+     <description>Minimum area threshold (pixels) for artery/arterioles</description>
+     <default>10</default>
+   </integer>
+  </parameters>
+  <parameters advanced="true">
     <label>Girder API URL and Key</label>
     <description>A Girder API URL and token for Girder client</description>
     <string>
