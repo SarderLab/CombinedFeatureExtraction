@@ -1,108 +1,72 @@
 FROM rocker/r-ubuntu:20.04
 
+LABEL maintainer="Anish Tatke - Sarder Lab. <anish.tatke@ufl.edu>"
 
+ENV DEBIAN_FRONTEND=noninteractive
 
-LABEL maintainer="Sayat Mimar - Sarder Lab. <sayat.mimar@ufl.edu>"
-
-CMD echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! STARTING THE BUILD !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
+# System deps for building Python + your usual deps
 RUN apt-get update && \
-    apt-get install --yes --no-install-recommends software-properties-common && \
-    # As of 2018-04-16 this repo has the latest release of Python 2.7 (2.7.14) \
-    # add-apt-repository ppa:jonathonf/python-2.7 && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get autoremove && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apt-get install -y --no-install-recommends \
+      ca-certificates curl wget git unzip \
+      build-essential make \
+      libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
+      libffi-dev liblzma-dev tk-dev \
+      libncursesw5-dev xz-utils \
+      libcurl4-openssl-dev libexpat1-dev libhdf5-dev \
+      libxml2-dev libxslt1-dev \
+      ffmpeg libsm6 libxext6 \
+      libtool pkg-config autoconf automake cmake \
+      libmemcached-dev memcached \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get --yes --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    #keyboard-configuration \
-    git \
-    wget \
-    curl \
-    ca-certificates \
-    libcurl4-openssl-dev \
-    libexpat1-dev \
-    unzip \
-    libhdf5-dev \
-    libpython3-dev \
-    python2.7-dev \
-    python-tk \
-    # We can't go higher than 3.7 and use tensorflow 1.x \
-    python3.8-dev \
-    python3.8-distutils \
-    python3-tk \
-    software-properties-common \
-    libssl-dev \
-    # Standard build tools \
-    build-essential \
-    cmake \
-    autoconf \
-    automake \
-    libtool \
-    pkg-config \
-    libmemcached-dev && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-CMD echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECKPOINT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-RUN apt-get update ##[edited]
-RUN apt-get install 'ffmpeg'\
-    'libsm6'\
-    'libxext6'  -y
-
-RUN apt-get install libxml2-dev libxslt1-dev -y
+# --- Install Python 3.12 from source ---
+ENV PYTHON_VERSION=3.12.8
+RUN curl -fsSLO https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
+    tar -xzf Python-${PYTHON_VERSION}.tgz && \
+    cd Python-${PYTHON_VERSION} && \
+    ./configure --enable-optimizations --with-ensurepip=install && \
+    make -j"$(nproc)" && \
+    make altinstall && \
+    cd / && rm -rf Python-${PYTHON_VERSION} Python-${PYTHON_VERSION}.tgz
 
 WORKDIR /
-# Make Python3 the default and install pip.  Whichever is done last determines
-# the default python version for pip.
 
-#Make a specific version of python the default and install pip
-RUN rm -f /usr/bin/python && \
-    rm -f /usr/bin/python3 && \
-    ln `which python3.8` /usr/bin/python && \
-    ln `which python3.8` /usr/bin/python3 && \
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py && \
-    ln `which pip3` /usr/bin/pip 
+# --- Make python/python3 point to Python 3.12  ---
+RUN ln -sf /usr/local/bin/python3.12 /usr/bin/python3 && \
+    ln -sf /usr/local/bin/python3.12 /usr/bin/python && \
+    ln -sf /usr/local/bin/pip3.12 /usr/bin/pip3 && \
+    ln -sf /usr/local/bin/pip3.12 /usr/bin/pip
 
-RUN which  python && \
-    python --version
+# --- Install pip in a stable way (no get-pip.py needed) ---
+RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel
 
-ENV build_path=$PWD/build
+ENV build_path=/build
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
-ENV fe_path=$PWD/FExtract
+ENV fe_path=/opt/FExtract
 RUN mkdir -p $fe_path
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends memcached && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY . $fe_path/
 WORKDIR $fe_path
 
-# Upgrade setuptools, as the version in Conda won't upgrade cleanly unless it
-# is ignored.
-
-RUN pip install --no-cache-dir --upgrade --ignore-installed pip setuptools && \
-    pip install --no-cache-dir .  && \
+# Upgrade setuptools, as the version in Conda won't upgrade cleanly unless it is ignored.
+RUN python -m pip install --no-cache-dir --no-build-isolation . && \
+    python -m pip freeze > /tmp/requirements.txt && \
     rm -rf /root/.cache/pip/*
 
 # Show what was installed
-RUN python --version && pip --version && pip freeze
+RUN which python && python --version && python -m pip --version
 
 # Define entrypoint through which all CLIs can be run
+LABEL entry_path=$fe_path/fextract/cli
 WORKDIR $fe_path/fextract/cli
 
 # Test our entrypoint.  If we have incompatible versions of numpy and
 # Openslide, one of these will fail
-RUN python -m slicer_cli_web.cli_list_entrypoint --list_cli
-RUN python -m slicer_cli_web.cli_list_entrypoint ClassicalFeatures --help
-RUN python -m slicer_cli_web.cli_list_entrypoint ExpandedGranularFeatures --help
+RUN python -m slicer_cli_web.cli_list_entrypoint --list_cli && \
+    python -m slicer_cli_web.cli_list_entrypoint PathomicsFE --help
 
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]

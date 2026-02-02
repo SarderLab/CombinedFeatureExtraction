@@ -3,13 +3,16 @@
 
 import os
 import sys
+from pathlib import Path
 
 from setuptools import find_packages
 from setuptools import setup
 
-with open('README.rst', 'rt') as readme_file:
-    readme = readme_file.read()
+readme_path = Path(__file__).parent / "README.rst"
+if not readme_path.exists():
+    readme_path = Path(__file__).parent / "README.md"
 
+readme = readme_path.read_text(encoding="utf-8") if readme_path.exists() else ""
 def prerelease_local_scheme(version):
     """
     Return local scheme version unless building on master in CircleCI.
@@ -32,9 +35,9 @@ setup(
     use_scm_version={'local_scheme': prerelease_local_scheme},
     description='Extract pathomic and extended clinical features',
     long_description=readme,
-    long_description_content_type='text/x-rst',
-    author='Sayat Mimar',
-    author_email='sayat.mimar@ufl.edu',
+    long_description_content_type='text/x-rst' if readme_path.suffix == ".rst" else "text/markdown",
+    author='Anish Tatke, Sayat Mimar',
+    author_email='anish.tatke@ufl.edu, sayat.mimar@ufl.edu',
     url='https://github.com/SarderLab/CombinedFeatureExtraction',
     packages=find_packages(exclude=['tests', '*_test']),
     package_dir={
@@ -44,13 +47,13 @@ setup(
     install_requires=[
         # scientific packages
         'nimfa>=1.3.2',
-        'numpy==1.19.5',
-        'scipy>=0.19.0',
+        'numpy>=1.26',
+        'scipy>=1.11',
         'Pillow==9.5.0',
-        'pandas==1.1.5',
+        'pandas>=2.1',
         'opencv-python',
-        'scikit-image==0.19.2',
-        'lxml==4.2.2',
+        'scikit-image>=0.22',
+        'lxml>=5.0',
         'joblib==1.1.0',
         'matplotlib',
         #'tifffile==2021.11.2',
