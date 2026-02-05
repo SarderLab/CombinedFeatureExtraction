@@ -65,7 +65,7 @@ RUN rm -f /usr/bin/python && \
     rm -f /usr/bin/python3 && \
     ln `which python3.8` /usr/bin/python && \
     ln `which python3.8` /usr/bin/python3 && \
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    curl https://bootstrap.pypa.io/pip/3.8/get-pip.py -o get-pip.py && \
     python get-pip.py && \
     rm get-pip.py && \
     ln `which pip3` /usr/bin/pip 

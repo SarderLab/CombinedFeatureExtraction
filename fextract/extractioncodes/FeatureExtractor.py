@@ -46,11 +46,7 @@ class FeatureExtractor:
                  slide_item_id: str,
                  sub_seg_params: list,
                  feature_list: list,
-                 skip_structures: list,
-                 test_run: bool,
-                 output_path = str,
-                 replace_annotations = True,
-                 returnXlsx=bool
+                 output_path = str
                  ):
 
         # Initializing properties of FeatureExtractor object
@@ -60,11 +56,9 @@ class FeatureExtractor:
         self.sub_seg_params = sub_seg_params
         self.slide_item_id = slide_item_id
         self.feature_list = feature_list
-        self.skip_structures = skip_structures
         self.output_path = output_path
-        self.test_run = test_run
-        self.replace_annotations = replace_annotations
-        self.returnXlsx = returnXlsx
+        self.replace_annotations = True
+        self.returnXlsx = True
 
         # Getting image information:
         self.image_info = self.gc.get(f'/item/{self.slide_item_id}/tiles')
@@ -99,17 +93,11 @@ class FeatureExtractor:
             annot['annotation']['name'] = annot['annotation']['name'].strip()
         self.annotations = [annot for annot in annotations if annot['annotation']['name'] in NAMES]
         
-        if not self.test_run:
-            agg_feat_metadata = {}
-            # Iterating through annotations and extracting features
-            for a_idx, ann in tqdm(enumerate(self.annotations),total = len(self.annotations)):
-                if 'annotation' in ann:
-                    if not 'interstitium' in ann['annotation']['name']:
-                        
-                        # Checking for skip annotations
-                        if ann['annotation']['name'] in self.skip_structures:
-                            print(f'Skipping {ann["annotation"]["name"]}')
-                            continue
+        agg_feat_metadata = {}
+        # Iterating through annotations and extracting features
+        for a_idx, ann in tqdm(enumerate(self.annotations),total = len(self.annotations)):
+            if 'annotation' in ann:
+                if not 'interstitium' in ann['annotation']['name']:
 
                         # Initialize annotation/compartment dictionary, keys for each feature category specified in self.feature_list
                         compartment_feature_dict = {i:[] for i in self.feature_list}
@@ -194,98 +182,21 @@ class FeatureExtractor:
                         else:
                             continue
             
-            # Putting metadata
-            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
+        # Putting metadata
+        self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps(agg_feat_metadata)})
 
-            # Putting sub-compartment segmentation parameters to item metadata
-            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps({'Sub-Compartment Parameters': self.sub_seg_params})})
+        # Putting sub-compartment segmentation parameters to item metadata
+        self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',parameters={'metadata':json.dumps({'Sub-Compartment Parameters': self.sub_seg_params})})
 
-            # Posting updated annotations to slide
-            if self.replace_annotations:
-                self.post_annotations()
+        # Posting updated annotations to slide
+        if self.replace_annotations:
+            self.post_annotations()
 
-            # Adding output excel files if present
-            if self.returnXlsx:
-                print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
-                for path in output_filenames:
-                    self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
-
-        else:
-
-            # Randomly select a structure from all the annotations and run feature extraction just for that one.
-            all_ann_names = [i['annotation']['name'] for i in self.annotations]
-            if isinstance(self.annotations,list):
-                ann_names = [i['annotation']['name'] for i in self.annotations if len(i['annotation']['elements'])>0 and i['annotation']['name'] not in self.skip_structures]
-            elif isinstance(self.annotations, dict):
-                if not self.annotations['name'] in self.skip_structures:
-                    ann_names = [self.annotations['name']]
-                else:
-                    print(f"Don't skip this structure! {self.annotations['name']}")
-                    sys.exit(1)
-
-            chosen_ann = random.choice(ann_names)
-            chosen_structure = np.random.randint(low=0,high = len(self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements']))
-
-            comp = self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements'][chosen_structure]
-            # Extract image, mask, and sub-compartment mask
-            try:
-                image, mask, bbox = self.grab_image_and_mask(comp['points'])
-                sub_compartment_mask = self.sub_segment_image(image, mask)
-            except UnidentifiedImageError:
-                # I believe this error occurs when the number of unique points is less than 3
-                print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
-                print(comp['points'])
-
-            # Gettining rid of structures with areas less than the minimum size for each subcompartment
-            if np.sum(np.sum(sub_compartment_mask,axis=-1))>0:
-                test_features = {}
-
-                # Iterating through feature extraction function handles
-                for feat in self.feature_extract_list:
-                    try:
-                        cat_feat = self.feature_extract_list[feat](image,sub_compartment_mask)
-                    except:
-                        cat_feat = self.feature_extract_list[feat](sub_compartment_mask)
-
-                    # Adding extracted category of features to element user metadata
-                    for c_f in cat_feat:
-                        test_features[c_f] = np.float64(cat_feat[c_f])
-            else:
-                print('Doh! These sub-compartments are wack!')
-                print(f'np.sum(np.sum(sub_compartment_mask,axis=-1)) = :{np.sum(np.sum(sub_compartment_mask,axis=-1))}')
-
-            # Saving test sample info.
-            combined_image_mask_sub = np.concatenate((image,np.uint8(255*np.repeat(mask[:,:,None],repeats=3,axis=-1)),np.uint8(255*sub_compartment_mask)),axis=1)
-            
-            # Converting to PIL Image
-            combined_image = Image.fromarray(combined_image_mask_sub)
-
-            # Extending the canvas to add the legend
-            image_width, image_height = combined_image.size
-            new_width = image_width + 250  # Additional width for the legend
-            extended_image = Image.new('RGB', (new_width, image_height), (0, 0, 0))
-            extended_image.paste(combined_image, (0, 0))
-
-            # Adding legend on the extended part
-            self.add_legend(extended_image)
-            image_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
-            feature_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
-
-            extended_image.save(image_path)
-            with open(feature_path,'w') as f:
-                json.dump(test_features,f)
-                f.close()
-
-            # Uploading to item
-            self.gc.uploadFileToItem(self.slide_item_id,image_path,reference=None,mimeType=None,filename=None,progressCallback=None)
-            self.gc.uploadFileToItem(self.slide_item_id,feature_path,reference=None,mimeType=None,filename=None,progressCallback=None)
-
-            print('Done with test run!')
-            print('Look in the "Files" section of the image you ran this on to see the test outputs')
-            print('-------------------------------------------')
-            print(f'/{chosen_ann}_{chosen_structure}_image.png')
-            print(f'/{chosen_ann}_{chosen_structure}_features.json')
-
+        # Adding output excel files if present
+        if self.returnXlsx:
+            print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
+            for path in output_filenames:
+                self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
 
     def grab_image_and_mask(self,coordinates):
 

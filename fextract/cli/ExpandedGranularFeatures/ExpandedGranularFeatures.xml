@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <executable>
   <category>HistomicsTK</category>
-  <title>Expanded Granular Feature Extraction</title>
-  <description>Run and Test Expanded Granular Features</description>
+  <title>Pathomic Feature Extraction</title>
+  <description>Feature extraction allows users to extract 72 morphometric and intensity-based features for each FTU</description>
   <version>0.1.0</version>
   <documentation-url>https://github.com/SarderLab/Feature_Extraction_SubCompartments/</documentation-url>
   <license>Apache 2.0</license>
@@ -11,26 +11,17 @@
   <parameters>
     <label>IO</label>
     <description>Input/output parameters.</description>
-    <string-enumeration>
-      <name>type</name>
-      <label>Job Type</label>
-      <description>Type of Job: "Feature Pipeline" or "Test Run"</description>
-      <default>Feature_Pipeline</default>
-      <element>Feature_Pipeline</element>
-      <element>Test_Run</element>
-      <index>0</index>
-    </string-enumeration>
     <image reference="_girder_id_">
       <name>input_image</name>
       <label>Input Image</label>
-      <description>Input Filename </description>
+      <description>The whole slide image(s) (WSI) for which feature extraction will be done</description>
       <channel>input</channel>
       <index>1</index>
     </image>
     <integer>
       <name>threshold_nuclei</name>
       <label>Threshold for Nuclei</label>
-      <description> Pixel intensity threshold for nuclear subcompartment</description>
+      <description> Defines the pixel intensity threshold used to identify the nuclear sub compartment. Pixels with intensities above this value are classified as nuclei.</description>
       <default>200</default>
       <channel>input</channel>
       <index>2</index>
@@ -38,7 +29,7 @@
     <integer>
       <name>minsize_nuclei</name>
       <label>Minimum Size for Nuclei</label>
-      <description> Minimum size for nuclear objects</description>
+      <description>Specifies the minimum allowable size (in pixels) for the  detected nuclear objects. Objects smaller than this threshold are discarded as noise or artifacts.</description>
       <default>20</default>
       <channel>input</channel>
       <index>3</index>
@@ -46,15 +37,15 @@
     <integer>
       <name>threshold_PAS</name>
       <label>Threshold for PAS</label>
-      <description> Pixel intensity for PAS subcompartment (if a pixel does not already belong to the nuclei subcompartment)</description>
+      <description> Defines the pixel intensity threshold for the PAS-stained sub compartment (if a pixel does not already belong to the nuclei subcompartment).</description>
       <default>50</default>
       <channel>input</channel>
       <index>4</index>
     </integer>
     <integer>
       <name>minsize_PAS</name>
-      <label>Minimum Size PAS</label>
-      <description> Minimum size for PAS objects</description>
+      <label>Minimum Size for PAS</label>
+      <description> Specifies the minimum size (in pixels) for PAS-positive objects. Small PAS regions below this size are removed. </description>
       <default>20</default>
       <channel>input</channel>
       <index>5</index>
@@ -62,43 +53,20 @@
     <integer>
       <name>threshold_LS</name>
       <label>Threshold for Luminal Space</label>
-      <description> Pixel intensity for Luminal Space subcompartment (if a pixel does not already belong to either the nuclei or PAS subcompartment)</description>
+      <description> Defines the pixel intensity threshold for detecting the luminal space sub compartment (if a pixel does not already belong to either the nuclei or PAS subcompartment)</description>
       <default>0</default>
       <channel>input</channel>
       <index>6</index>
     </integer>
     <integer>
       <name>minsize_LS</name>
-      <label>Mininum Size Luminal Space</label>
-      <description> Minimum size for Luminal Space objects</description>
+      <label>Minimum Size Luminal Space</label>
+      <description> Specifies the minimum size (in pixels) for detected luminal space regions. Filters out very small or spurious luminal detections.</description>
       <default>0</default>
       <channel>input</channel>
       <index>7</index>
     </integer>
-    <string>
-      <name>ignoreAnns</name>
-      <longflag>ignore_anns</longflag>
-      <label>Ignore Annotations</label>
-      <description>Specify annotation names to ignore (spots and interstitium are automatically skipped, comma separated list)</description>
-      <default>""</default>
-      <index>8</index>
-    </string>
-    <boolean>
-      <name>returnXlsx</name>
-      <longflag>return_xlsx</longflag>
-      <label>Return Excel File(s)</label>
-      <description>Whether or not to output excel files containing extracted features</description>
-      <default>0</default>
-      <index>9</index>
-    </boolean>
-    <boolean>
-      <name>replace_annotations</name>
-      <longflag>replace_annotations</longflag>
-      <label>Annotations with Feature Data</label>
-      <description>Replace current annotations with copies that contain feature values as metadata.</description>
-      <default>1</default>
-      <index>10</index>
-    </boolean>
+
   </parameters>
   <parameters advanced="true">
     <label>Girder API URL and Key</label>
