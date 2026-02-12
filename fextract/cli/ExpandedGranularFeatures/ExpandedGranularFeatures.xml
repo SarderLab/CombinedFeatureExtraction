@@ -2,7 +2,7 @@
 <executable>
   <category>HistomicsTK</category>
   <title>Pathomic Feature Extraction</title>
-  <description>Feature extraction allows users to extract 72 morphometric and intensity-based features for each FTU</description>
+  <description>Feature extraction allows users to extract 72 morphometric and intensity-based features for each FTU (ignores Spots and Interstitium annotations)</description>
   <version>0.1.0</version>
   <documentation-url>https://github.com/SarderLab/Feature_Extraction_SubCompartments/</documentation-url>
   <license>Apache 2.0</license>

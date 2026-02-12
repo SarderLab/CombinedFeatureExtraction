@@ -1,7 +1,4 @@
 {
-    "ClassicalFeatures": {
-      "type"    : "python"
-    },
     "ExpandedGranularFeatures": {
       "type"    : "python"
     }

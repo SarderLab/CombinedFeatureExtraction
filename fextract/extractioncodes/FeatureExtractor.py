@@ -33,7 +33,7 @@ import sys
 import shutil
 from PIL import Image, ImageDraw, ImageFont
 
-NAMES = ['cortical_interstitium','medullary_interstitium','non_globally_sclerotic_glomeruli','globally_sclerotic_glomeruli','tubules','arteries/arterioles']
+NAMES = ['cortical_interstitium','medullary_interstitium','non_globally_sclerotic_glomeruli','globally_sclerotic_glomeruli','tubules','arteries/arterioles', 'gloms']
 # Define color coding
 RED = [255, 0, 0]
 GREEN = [0, 255, 0]
