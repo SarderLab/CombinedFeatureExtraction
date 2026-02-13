@@ -8,7 +8,7 @@ Combined Feature Extraction is a collection of 3 pipelines for extracting and qu
 - ClassicalFeatures
     - Pathomic
     - Extended Clinical
-- ExpandedGranularFeatures
+- PathomicsFE
 
 At the high level using image analysis techniques, the plugin extracts image and contour-based pathomic features; namely, area, mesangial area for each glomerulus, average TBM tickness, average cell thickness and luminal fraction for each tubule and arterial area for each artery. The extended clinical features also include Area and Radius of each FTU. The FTUs are comupted by the [Multi-Compartment segmentation model](https://github.com/SarderLab/Multi-Compartment-Segmentation).
 
@@ -22,7 +22,7 @@ Once the feature extraction jobs are run in the HistomicsUI, the extracted featu
 
 <img src="figures/classical.PNG"  width="60%" height="30%">
 
-2. ExpandedGranularFeatures plugin shown in HistomicUI. The user can adjsut hyperparameters and run a "Test Run" before running the Feature Pipeline.
+2. PathomicsFE plugin shown in HistomicUI. The user can adjsut hyperparameters and run a "Test Run" before running the Feature Pipeline.
 
 <img src="figures/expendedgrandular.PNG"  width="60%" height="30%">
 
