@@ -3,7 +3,7 @@ import sys
 from ctk_cli import CLIArgumentParser
 from tiffslide import TiffSlide
 sys.path.append("..")
-from extractioncodes.FeatureExtractor import FeatureExtractor
+from fextract.extractioncodes.FeatureExtractor import FeatureExtractor
 
 import girder_client
 
@@ -71,12 +71,6 @@ def main(args):
     # Getting list of features to calculate
     feature_list = ['Distance Transform Features','Color Features','Texture Features','Morphological Features']
 
-    # Getting structures to skip
-    skip_structures = args.ignoreAnns.split(',')
-    if not type(skip_structures)==list:
-        skip_structures = [skip_structures]
-    skip_structures = [layer.strip() for layer in skip_structures]
-
     output_path = '/tmp/'
 
     FeatureExtractor(
@@ -85,11 +79,7 @@ def main(args):
         slide_item_id = item_id,
         sub_seg_params=sub_seg_params,
         feature_list = feature_list,
-        skip_structures = skip_structures,
-        test_run = args.type == 'Test_Run',
-        output_path = output_path,
-        replace_annotations = args.replace_annotations,
-        returnXlsx = args.returnXlsx
+        output_path = output_path
     )
 
 if __name__ == "__main__":

@@ -31,11 +31,15 @@ RUN curl -fsSLO https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYT
 
 WORKDIR /
 
-# --- Make python/python3 point to Python 3.12  ---
-RUN ln -sf /usr/local/bin/python3.12 /usr/bin/python3 && \
-    ln -sf /usr/local/bin/python3.12 /usr/bin/python && \
-    ln -sf /usr/local/bin/pip3.12 /usr/bin/pip3 && \
-    ln -sf /usr/local/bin/pip3.12 /usr/bin/pip
+#Make a specific version of python the default and install pip
+RUN rm -f /usr/bin/python && \
+    rm -f /usr/bin/python3 && \
+    ln `which python3.8` /usr/bin/python && \
+    ln `which python3.8` /usr/bin/python3 && \
+    curl https://bootstrap.pypa.io/pip/3.8/get-pip.py -o get-pip.py && \
+    python get-pip.py && \
+    rm get-pip.py && \
+    ln `which pip3` /usr/bin/pip 
 
 # --- Install pip in a stable way (no get-pip.py needed) ---
 RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel
