@@ -6,7 +6,7 @@
   <version>0.1.0</version>
   <documentation-url>https://github.com/SarderLab/Feature_Extraction_SubCompartments/</documentation-url>
   <license>Apache 2.0</license>
-  <contributor>Sam Border (UFL)</contributor>
+  <contributor>Anish Tatke (UFL)</contributor>
   <acknowledgements>This work is part of efforts in digital pathology by the Sarder Lab: UFL.</acknowledgements>
   <parameters>
     <label>IO</label>
