@@ -1,0 +1,98 @@
+# Dockerfile.notebook
+#
+# Local / notebook mode for PathomicsFE — no Girder or DSA required.
+#
+# Build:
+#   docker build -f Dockerfile.notebook -t pathomicsfe-local .
+#
+# Run (CLI):
+#   docker run --rm \
+#     -v /path/to/slides:/data/slides \
+#     -v /path/to/annotations:/data/annotations \
+#     -v /path/to/output:/data/output \
+#     pathomicsfe-local \
+#     --input_image /data/slides/sample.svs \
+#     --annotations_dir /data/annotations \
+#     --output_dir /data/output
+#
+# Run (Jupyter notebook):
+#   docker run --rm -p 8888:8888 \
+#     -v /path/to/slides:/data/slides \
+#     -v /path/to/annotations:/data/annotations \
+#     -v /path/to/output:/data/output \
+#     --entrypoint jupyter \
+#     pathomicsfe-local \
+#     notebook --ip=0.0.0.0 --allow-root --no-browser --NotebookApp.token=''
+
+FROM python:3.12-slim
+
+LABEL maintainer="Sarder Lab"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# System dependencies required by OpenCV, tiffslide, scikit-image, etc.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      build-essential \
+      libssl-dev \
+      libffi-dev \
+      libxml2-dev \
+      libxslt1-dev \
+      libhdf5-dev \
+      libcurl4-openssl-dev \
+      ffmpeg \
+      libsm6 \
+      libxext6 \
+      libtiff-dev \
+      libopenjp2-7-dev \
+      libglib2.0-0 \
+      git \
+      curl \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+
+ENV APP_PATH=/opt/FExtract
+RUN mkdir -p $APP_PATH
+
+COPY . $APP_PATH/
+WORKDIR $APP_PATH
+
+# Install the package without Girder/slicer_cli_web dependencies.
+# We override only the Girder-specific extras; all scientific deps come
+# from setup.py as-is.
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+      numpy \
+      scipy \
+      "Pillow==9.5.0" \
+      pandas \
+      opencv-python-headless \
+      scikit-image \
+      lxml \
+      "joblib==1.1.0" \
+      matplotlib \
+      tiffslide \
+      "tqdm==4.64.0" \
+      openpyxl \
+      "xlrd<2" \
+      "dask[dataframe]" \
+      distributed \
+      XlsxWriter \
+      nimfa \
+      jupyter \
+      notebook && \
+    # Install the fextract package itself (excludes girder/ctk deps since
+    # we installed the scientific stack above without them)
+    pip install --no-cache-dir --no-deps -e . && \
+    rm -rf /root/.cache/pip/*
+
+# Verify the local entry point is importable
+RUN python -c "from fextract.extractioncodes.LocalFeatureExtractor import LocalFeatureExtractor; print('LocalFeatureExtractor OK')"
+
+# Default working directory for mounted data
+WORKDIR /data
+
+# Default entrypoint: run the local CLI script.
+# Override with --entrypoint jupyter for notebook mode (see header comments).
+ENTRYPOINT ["python", "/opt/FExtract/fextract/cli/PathomicsFE/PathomicsFE_local.py"]
