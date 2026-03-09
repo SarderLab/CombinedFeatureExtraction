@@ -95,4 +95,4 @@ WORKDIR /data
 
 # Default entrypoint: run the local CLI script.
 # Override with --entrypoint jupyter for notebook mode (see header comments).
-ENTRYPOINT ["python", "/opt/FExtract/fextract/cli/PathomicsFE/PathomicsFE_local.py"]
+ENTRYPOINT ["python", "/opt/FExtract/fextract/cli/PathomicsFE/PathomicsFELocal.py"]

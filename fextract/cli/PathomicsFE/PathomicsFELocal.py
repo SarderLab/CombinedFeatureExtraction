@@ -6,7 +6,7 @@ JSON files instead of Girder file IDs. Outputs are written to a local directory.
 
 Usage example
 -------------
-python PathomicsFE_local.py \
+python PathomicsFELocal.py \
     --input_image /data/slides/sample.svs \
     --annotations_dir /data/annotations/ \
     --output_dir /data/output \
