@@ -15,5 +15,3 @@ dist
 *.log
 *.tmp
 .env
-README.md
-README.rst

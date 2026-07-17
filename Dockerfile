@@ -1,10 +1,10 @@
-FROM rocker/r-ubuntu:20.04
+FROM rocker/r-ubuntu:22.04
 
 
 
 LABEL maintainer="Sayat Mimar - Sarder Lab. <sayat.mimar@ufl.edu>"
 
-CMD echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! STARTING THE BUILD !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+RUN echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! STARTING THE BUILD !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 
@@ -29,11 +29,8 @@ RUN apt-get update && \
     unzip \
     libhdf5-dev \
     libpython3-dev \
-    python2.7-dev \
-    python-tk \
-    # We can't go higher than 3.7 and use tensorflow 1.x \
-    python3.8-dev \
-    python3.8-distutils \
+    python3.11-dev \
+    python3.11-distutils \
     python3-tk \
     software-properties-common \
     libssl-dev \
@@ -53,7 +50,7 @@ RUN apt-get update && \
     apt-get install --reinstall -y ca-certificates && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-CMD echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECKPOINT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+RUN echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECKPOINT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 RUN apt-get update ##[edited]
 RUN apt-get install 'ffmpeg'\
@@ -69,9 +66,9 @@ WORKDIR /
 #Make a specific version of python the default and install pip
 RUN rm -f /usr/bin/python && \
     rm -f /usr/bin/python3 && \
-    ln -s $(which python3.8) /usr/bin/python && \
-    ln -s $(which python3.8) /usr/bin/python3 && \
-    curl https://bootstrap.pypa.io/pip/3.8/get-pip.py -o get-pip.py && \
+    ln -s $(which python3.11) /usr/bin/python && \
+    ln -s $(which python3.11) /usr/bin/python3 && \
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python get-pip.py && \
     rm get-pip.py && \
     ln -s $(which pip3) /usr/bin/pip
@@ -79,10 +76,9 @@ RUN rm -f /usr/bin/python && \
 RUN which  python && \
     python --version
 
-ENV build_path=$PWD/build
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
-ENV fe_path=$PWD/FExtract
+ENV fe_path=/FExtract
 RUN mkdir -p $fe_path
 
 RUN apt-get update && \
