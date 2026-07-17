@@ -47,6 +47,12 @@ RUN apt-get update && \
     libmemcached-dev && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Refresh OS CA certs so TLS verification against servers signed by newer
+# CAs (e.g. InCommon RSA OV SSL CA 3) doesn't fail with an outdated bundle.
+RUN apt-get update && \
+    apt-get install --reinstall -y ca-certificates && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 CMD echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECKPOINT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 RUN apt-get update ##[edited]
@@ -63,12 +69,12 @@ WORKDIR /
 #Make a specific version of python the default and install pip
 RUN rm -f /usr/bin/python && \
     rm -f /usr/bin/python3 && \
-    ln `which python3.8` /usr/bin/python && \
-    ln `which python3.8` /usr/bin/python3 && \
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    ln -s $(which python3.8) /usr/bin/python && \
+    ln -s $(which python3.8) /usr/bin/python3 && \
+    curl https://bootstrap.pypa.io/pip/3.8/get-pip.py -o get-pip.py && \
     python get-pip.py && \
     rm get-pip.py && \
-    ln `which pip3` /usr/bin/pip 
+    ln -s $(which pip3) /usr/bin/pip
 
 RUN which  python && \
     python --version
