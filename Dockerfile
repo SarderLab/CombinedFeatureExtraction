@@ -4,14 +4,8 @@ FROM rocker/r-ubuntu:22.04
 
 LABEL maintainer="Sayat Mimar - Sarder Lab. <sayat.mimar@ufl.edu>"
 
-RUN echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! STARTING THE BUILD !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends software-properties-common && \
-    # As of 2018-04-16 this repo has the latest release of Python 2.7 (2.7.14) \
-    # add-apt-repository ppa:jonathonf/python-2.7 && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt-get autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -19,7 +13,6 @@ RUN apt-get update && \
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get --yes --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    #keyboard-configuration \
     git \
     wget \
     curl \
@@ -50,9 +43,7 @@ RUN apt-get update && \
     apt-get install --reinstall -y ca-certificates && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECKPOINT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-RUN apt-get update ##[edited]
+RUN apt-get update
 RUN apt-get install 'ffmpeg'\
     'libsm6'\
     'libxext6'  -y

@@ -99,6 +99,20 @@
       <default>1</default>
       <index>10</index>
     </boolean>
+    <integer>
+      <name>glom_index</name>
+      <longflag>glom_index</longflag>
+      <label>Glomerulus Structure Index (Test Run)</label>
+      <description>Test Run only: pick a specific glomerulus structure by index instead of a random one. -1 = random.</description>
+      <default>-1</default>
+    </integer>
+    <integer>
+      <name>vessel_index</name>
+      <longflag>vessel_index</longflag>
+      <label>Vessel Structure Index (Test Run)</label>
+      <description>Test Run only: pick a specific arteries/arterioles structure by index instead of a random one. -1 = random.</description>
+      <default>-1</default>
+    </integer>
   </parameters>
   <parameters advanced="true">
     <label>Girder API URL and Key</label>

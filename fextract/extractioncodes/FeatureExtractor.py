@@ -52,7 +52,9 @@ class FeatureExtractor:
                  test_run: bool,
                  output_path = str,
                  replace_annotations = True,
-                 returnXlsx=bool
+                 returnXlsx=bool,
+                 glom_index = -1,
+                 vessel_index = -1
                  ):
 
         # Initializing properties of FeatureExtractor object
@@ -67,6 +69,8 @@ class FeatureExtractor:
         self.test_run = test_run
         self.replace_annotations = replace_annotations
         self.returnXlsx = returnXlsx
+        self.glom_index = glom_index
+        self.vessel_index = vessel_index
 
         # Getting image information:
         self.image_info = self.gc.get(f'/item/{self.slide_item_id}/tiles')
@@ -216,7 +220,7 @@ class FeatureExtractor:
                 
         else:
 
-            # Randomly select a structure from all the annotations and run feature extraction just for that one.
+            # Select a structure from all the annotations and run feature extraction just for that one.
             all_ann_names = [i['annotation']['name'] for i in self.annotations]
             if isinstance(self.annotations,list):
                 ann_names = [i['annotation']['name'] for i in self.annotations if len(i['annotation']['elements'])>0 and i['annotation']['name'] not in self.skip_structures]
@@ -227,69 +231,98 @@ class FeatureExtractor:
                     print(f"Don't skip this structure! {self.annotations['name']}")
                     sys.exit(1)
 
-            chosen_ann = random.choice(ann_names)
-            chosen_structure = np.random.randint(low=0,high = len(self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements']))
+            glomerulus_names = [n for n in ann_names if n != 'arteries/arterioles']
+            vessel_available = 'arteries/arterioles' in ann_names
 
-            comp = self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements'][chosen_structure]
-            # Extract image, mask, and sub-compartment mask
-            try:
-                image, mask, bbox = self.grab_image_and_mask(comp['points'])
-                sub_compartment_mask = self.sub_segment_image(image, mask)
-            except UnidentifiedImageError:
-                # I believe this error occurs when the number of unique points is less than 3
-                print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
-                print(comp['points'])
+            if not glomerulus_names and not vessel_available:
+                print(f"Don't skip this structure! {ann_names}")
+                sys.exit(1)
 
-            # Gettining rid of structures with areas less than the minimum size for each subcompartment
-            if np.sum(np.sum(sub_compartment_mask,axis=-1))>0:
-                test_features = {}
+            if glomerulus_names:
+                chosen_ann = random.choice(glomerulus_names)
+                n_elements = len(self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements'])
+                chosen_structure = self._resolve_structure_index(self.glom_index, n_elements, chosen_ann)
+                self._process_test_sample(chosen_ann, chosen_structure)
 
-                # Iterating through feature extraction function handles
-                for feat in self.feature_extract_list:
-                    try:
-                        cat_feat = self.feature_extract_list[feat](image,sub_compartment_mask)
-                    except:
-                        cat_feat = self.feature_extract_list[feat](sub_compartment_mask)
+            if vessel_available:
+                chosen_ann = 'arteries/arterioles'
+                n_elements = len(self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements'])
+                chosen_structure = self._resolve_structure_index(self.vessel_index, n_elements, chosen_ann)
+                self._process_test_sample(chosen_ann, chosen_structure)
 
-                    # Adding extracted category of features to element user metadata
-                    for c_f in cat_feat:
-                        test_features[c_f] = np.float64(cat_feat[c_f])
-            else:
-                print('Doh! These sub-compartments are wack!')
-                print(f'np.sum(np.sum(sub_compartment_mask,axis=-1)) = :{np.sum(np.sum(sub_compartment_mask,axis=-1))}')
+    def _resolve_structure_index(self, requested_index, n_elements, chosen_ann):
+        if requested_index is not None and requested_index >= 0:
+            if requested_index < n_elements:
+                return requested_index
+            print(f'Requested index {requested_index} out of range (0-{n_elements-1}) for {chosen_ann}; falling back to random.')
+        return np.random.randint(low=0, high=n_elements)
 
-            # Saving test sample info.
-            combined_image_mask_sub = np.concatenate((image,np.uint8(255*np.repeat(mask[:,:,None],repeats=3,axis=-1)),np.uint8(255*sub_compartment_mask)),axis=1)
-            
-            # Converting to PIL Image
-            combined_image = Image.fromarray(combined_image_mask_sub)
 
-            # Extending the canvas to add the legend
-            image_width, image_height = combined_image.size
-            new_width = image_width + 250  # Additional width for the legend
-            extended_image = Image.new('RGB', (new_width, image_height), (0, 0, 0))
-            extended_image.paste(combined_image, (0, 0))
+    def _process_test_sample(self, chosen_ann, chosen_structure):
 
-            # Adding legend on the extended part
-            self.add_legend(extended_image)
-            image_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
-            feature_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
+        all_ann_names = [i['annotation']['name'] for i in self.annotations]
+        comp = self.annotations[all_ann_names.index(chosen_ann)]['annotation']['elements'][chosen_structure]
+        # Extract image, mask, and sub-compartment mask
+        try:
+            image, mask, bbox = self.grab_image_and_mask(comp['points'])
+            sub_compartment_mask = self.sub_segment_image(image, mask)
+        except UnidentifiedImageError:
+            # I believe this error occurs when the number of unique points is less than 3
+            print(f'PIL.UnidentifiedImageError encountered in {ann["annotation"]["name"]}, {c_idx}')
+            print(comp['points'])
 
-            extended_image.save(image_path)
-            with open(feature_path,'w') as f:
-                json.dump(test_features,f)
-                f.close()
-            # Uploading to item
-            self.gc.uploadFileToItem(self.slide_item_id,image_path,reference=None,mimeType=None,filename=None,progressCallback=None)
-            self.gc.uploadFileToItem(self.slide_item_id,feature_path,reference=None,mimeType=None,filename=None,progressCallback=None)
-            
-            print('Done with test run!')
-            print('Look in the "Files" section of the image you ran this on to see the test outputs')
-            print('-------------------------------------------')
-            print(f'/{chosen_ann}_{chosen_structure}_image.png')
-            print(f'/{chosen_ann}_{chosen_structure}_features.json')
+        # Gettining rid of structures with areas less than the minimum size for each subcompartment
+        if np.sum(np.sum(sub_compartment_mask,axis=-1))>0:
+            test_features = {}
 
-        
+            # Iterating through feature extraction function handles
+            for feat in self.feature_extract_list:
+                try:
+                    cat_feat = self.feature_extract_list[feat](image,sub_compartment_mask)
+                except:
+                    cat_feat = self.feature_extract_list[feat](sub_compartment_mask)
+
+                # Adding extracted category of features to element user metadata
+                for c_f in cat_feat:
+                    test_features[c_f] = np.float64(cat_feat[c_f])
+        else:
+            print('Doh! These sub-compartments are wack!')
+            print(f'np.sum(np.sum(sub_compartment_mask,axis=-1)) = :{np.sum(np.sum(sub_compartment_mask,axis=-1))}')
+            return None, None
+
+        # Saving test sample info.
+        combined_image_mask_sub = np.concatenate((image,np.uint8(255*np.repeat(mask[:,:,None],repeats=3,axis=-1)),np.uint8(255*sub_compartment_mask)),axis=1)
+
+        # Converting to PIL Image
+        combined_image = Image.fromarray(combined_image_mask_sub)
+
+        # Extending the canvas to add the legend
+        image_width, image_height = combined_image.size
+        new_width = image_width + 250  # Additional width for the legend
+        extended_image = Image.new('RGB', (new_width, image_height), (0, 0, 0))
+        extended_image.paste(combined_image, (0, 0))
+
+        # Adding legend on the extended part
+        self.add_legend(extended_image)
+        image_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_image.png"
+        feature_path = f"{self.output_path}{chosen_ann.replace('/','')}_{chosen_structure}_features.json"
+
+        extended_image.save(image_path)
+        with open(feature_path,'w') as f:
+            json.dump(test_features,f)
+            f.close()
+        # Uploading to item
+        self.gc.uploadFileToItem(self.slide_item_id,image_path,reference=None,mimeType=None,filename=None,progressCallback=None)
+        self.gc.uploadFileToItem(self.slide_item_id,feature_path,reference=None,mimeType=None,filename=None,progressCallback=None)
+
+        print('Done with test run!')
+        print('Look in the "Files" section of the image you ran this on to see the test outputs')
+        print('-------------------------------------------')
+        print(f'/{chosen_ann}_{chosen_structure}_image.png')
+        print(f'/{chosen_ann}_{chosen_structure}_features.json')
+
+        return image_path, feature_path
+
     def grab_image_and_mask(self,coordinates):
 
         coordinates = np.squeeze(np.array(coordinates))

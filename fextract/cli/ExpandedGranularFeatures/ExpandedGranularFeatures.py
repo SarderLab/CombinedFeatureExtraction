@@ -94,7 +94,9 @@ def main(args):
         test_run = args.type == 'Test_Run',
         output_path = output_path,
         replace_annotations = args.replace_annotations,
-        returnXlsx = args.returnXlsx
+        returnXlsx = args.returnXlsx,
+        glom_index = int(args.glom_index),
+        vessel_index = int(args.vessel_index)
     )
 
 if __name__ == "__main__":
