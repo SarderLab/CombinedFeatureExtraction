@@ -1,5 +1,7 @@
 import os, cv2
-from fextract.extractioncodes.upload_assetstore_files import uploadFilesToOriginalFolder
+# retire-girder-dependency: uploadFilesToOriginalFolder wrote directly to Girder's assetstore
+# filesystem path (and carried a hardcoded fallback admin API key, see upload_assetstore_files.py) —
+# dropped; storage_client.upload_result_file() below covers the same output file already
 import numpy as np
 
 import lxml.etree as ET
@@ -21,7 +23,6 @@ from skimage.color import rgb2hsv
 
 from skimage.filters import *
 from datetime import datetime
-import girder_client
 
 CHOP_THUMBNAIL_RESOLUTION = 16
 MIN_SIZE = [30,30,30,30,30,30]
@@ -29,9 +30,8 @@ def getExtendedClinicalFeatures(args):
 
     # assert args.target is not None, 'Directory of xmls must be specified, use --target /path/to/files.xml'
     # assert args.wsis is not None, 'Directory of WSIs must be specified, use --wsis /path/to/wsis'
-  
-    gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
-    gc.setToken(args.girderToken)
+
+    client = args.storage_client
 
     file_name = args.file.split('/')[-1]
     slide_item_id = args.item_id
@@ -384,10 +384,8 @@ def getExtendedClinicalFeatures(args):
 
         workbook.close()
 
-        gc.uploadFileToItem(slide_item_id, xlsx_path, reference=None, mimeType=None, filename=None, progressCallback=None)
-        print('Girder file uploaded!')
-        # Uploading to user folder
-        uploadFilesToOriginalFolder(gc, [xlsx_path], slide_item_id, 'CombinedFE_ExtendedClinical', args.girderApiUrl)
+        client.upload_result_file(slide_item_id, os.path.basename(xlsx_path), xlsx_path)
+        print('Result file uploaded!')
         print('Done.')
 
 def points_to_features_glom(points,args,min_size,cortex,medulla):

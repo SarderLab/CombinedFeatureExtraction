@@ -92,10 +92,9 @@ RUN python --version && pip --version && pip freeze
 # Define entrypoint through which all CLIs can be run
 WORKDIR $fe_path/fextract/cli
 LABEL entry_path=$fe_path/fextract/cli
-# Test our entrypoint.  If we have incompatible versions of numpy and
-# Openslide, one of these will fail
-RUN python -m slicer_cli_web.cli_list_entrypoint --list_cli
-RUN python -m slicer_cli_web.cli_list_entrypoint ClassicalFeatures --help
-RUN python -m slicer_cli_web.cli_list_entrypoint ExpandedGranularFeatures --help
+# retire-girder-dependency: no more slicer_cli_web CLI-XML entrypoints to smoke-test at build time;
+# import the rewritten entrypoints' dependencies instead so incompatible numpy/openslide versions
+# still fail the build the same way the old check did
+RUN python -c "import numpy, tiffslide, requests"
 
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]

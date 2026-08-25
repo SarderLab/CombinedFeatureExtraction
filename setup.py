@@ -61,10 +61,10 @@ setup(
         # dask packages
         'dask[dataframe]>=1.1.0',
         'distributed>=1.21.6',
-        'girder-slicer-cli-web',
-        'girder-client',
-        'ctk-cli',
-        'XlsxWriter'    
+        # retire-girder-dependency: girder-slicer-cli-web/girder-client/ctk-cli dropped —
+        # I/O now goes through storage_client.py (StorageClient) against the first-party storage API
+        'requests',
+        'XlsxWriter'
     ],
     license='Apache Software License 2.0',
     keywords='podo',

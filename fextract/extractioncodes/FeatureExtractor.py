@@ -5,8 +5,12 @@ Morphometric feature extraction features for sub-compartments within segmented F
 
 """
 
-from fextract.extractioncodes.upload_assetstore_files import uploadFilesToOriginalFolder
+# retire-girder-dependency: uploadFilesToOriginalFolder wrote directly to Girder's assetstore
+# filesystem path (and carried a hardcoded fallback admin API key, see upload_assetstore_files.py) —
+# dropped; storage_client.upload_result_file() (called elsewhere in this class) already uploads the
+# same output files per-item, this was a redundant second write path
 import numpy as np
+import requests
 import cv2
 from skimage.feature import graycomatrix, graycoprops
 from skimage.color import rgb2gray, rgb2hsv
@@ -17,8 +21,6 @@ from skimage.measure import label, regionprops
 from scipy import ndimage as ndi
 from skimage.feature import peak_local_max
 from skimage import exposure
-
-import girder_client
 
 from PIL import Image, UnidentifiedImageError
 Image.MAX_IMAGE_PIXELS = None
@@ -43,7 +45,7 @@ BLUE = [0, 0, 255]
 
 class FeatureExtractor:
     def __init__(self,
-                 gc,
+                 client,
                  slide,
                  slide_item_id: str,
                  sub_seg_params: list,
@@ -58,9 +60,11 @@ class FeatureExtractor:
                  ):
 
         # Initializing properties of FeatureExtractor object
-        self.gc = gc
+        # retire-girder-dependency: `client` is a storage_client.StorageClient, not a girder_client.
+        # `self.user_token`/`self.image_info` dropped — the former was only needed for Girder's
+        # `?token=` query-param auth style (gone with it); the latter was fetched but never read.
+        self.client = client
         self.slide=slide
-        self.user_token = self.gc.get('/token/session')['token']
         self.sub_seg_params = sub_seg_params
         self.slide_item_id = slide_item_id
         self.feature_list = feature_list
@@ -72,8 +76,6 @@ class FeatureExtractor:
         self.glom_index = glom_index
         self.vessel_index = vessel_index
 
-        # Getting image information:
-        self.image_info = self.gc.get(f'/item/{self.slide_item_id}/tiles')
         output_filenames=[]
         # Making feature extract list
         self.feature_extract_list = {} 
@@ -100,7 +102,7 @@ class FeatureExtractor:
         self.sub_comp_names = [i['name'] for i in self.sub_seg_params]
 
         # Getting annotations
-        annotations = self.gc.get(f'annotation/item/{self.slide_item_id}', parameters={'sort': 'updated'})
+        annotations = self.client.get_annotations(self.slide_item_id)
         for annot in annotations:
             annot['annotation']['name'] = annot['annotation']['name'].strip()
         self.annotations = [annot for annot in annotations if annot['annotation']['name'] in NAMES]
@@ -201,10 +203,10 @@ class FeatureExtractor:
                             continue
             
             # Putting metadata
-            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',data={'metadata':json.dumps(agg_feat_metadata)})
+            self.client.put_item_metadata(self.slide_item_id, agg_feat_metadata)
 
             # Putting sub-compartment segmentation parameters to item metadata
-            self.gc.put(f'/item/{self.slide_item_id}/metadata?token={self.user_token}',data={'metadata':json.dumps({'Sub-Compartment Parameters': self.sub_seg_params})})
+            self.client.put_item_metadata(self.slide_item_id, {'Sub-Compartment Parameters': self.sub_seg_params})
 
             # Posting updated annotations to slide
             if self.replace_annotations:
@@ -214,10 +216,8 @@ class FeatureExtractor:
             if self.returnXlsx:
                 print(f'Uploading {len(output_filenames)} to {self.slide_item_id}')
                 for path in output_filenames:
-                    self.gc.uploadFileToItem(self.slide_item_id, path, reference=None, mimeType=None, filename=None, progressCallback=None)
-                # Uploading to user folder
-                uploadFilesToOriginalFolder(self.gc, output_filenames, self.slide_item_id, 'CombinedFE_ExpandedGranular', self.gc.urlBase)
-                
+                    self.client.upload_result_file(self.slide_item_id, os.path.basename(path), path)
+
         else:
 
             # Select a structure from all the annotations and run feature extraction just for that one.
@@ -312,8 +312,8 @@ class FeatureExtractor:
             json.dump(test_features,f)
             f.close()
         # Uploading to item
-        self.gc.uploadFileToItem(self.slide_item_id,image_path,reference=None,mimeType=None,filename=None,progressCallback=None)
-        self.gc.uploadFileToItem(self.slide_item_id,feature_path,reference=None,mimeType=None,filename=None,progressCallback=None)
+        self.client.upload_result_file(self.slide_item_id, os.path.basename(image_path), image_path)
+        self.client.upload_result_file(self.slide_item_id, os.path.basename(feature_path), feature_path)
 
         print('Done with test run!')
         print('Look in the "Files" section of the image you ran this on to see the test outputs')
@@ -653,23 +653,14 @@ class FeatureExtractor:
 
     def post_annotations(self):
 
-        # Updating with new annotations
+        # Updating with new annotations. retire-girder-dependency: replace_annotation() upserts by
+        # name in one call — the old delete-then-post (and its `?token=` query-param auth style) is
+        # gone, that was purely a Girder API quirk, not a requirement of the update semantics.
         for ann in self.annotations:
             try:
-                json_string = json.dumps(ann)
-
-                self.gc.delete(f'/annotation/{ann["_id"]}?token={self.user_token}')
-
-                self.gc.post(f'/annotation/item/{self.slide_item_id}?token={self.user_token}',
-                    data = json_string,
-                    headers={
-                        'X-HTTP-Method':'POST',
-                        'Content-Type':'application/json'
-                        }
-                    )
-            
-            except (json.decoder.JSONDecodeError, girder_client.HttpError) as error:
-                print(f'Error occurred on {ann["name"]}')
+                self.client.replace_annotation(self.slide_item_id, ann['annotation'])
+            except (json.decoder.JSONDecodeError, requests.HTTPError) as error:
+                print(f'Error occurred on {ann["annotation"]["name"]}: {error}')
 
     def add_legend(self, image):
         draw = ImageDraw.Draw(image)

@@ -1,44 +1,22 @@
 import os
 import sys
-from ctk_cli import CLIArgumentParser
 from tiffslide import TiffSlide
 sys.path.append("..")
 from extractioncodes.FeatureExtractor import FeatureExtractor
+from fextract.storage_client import StorageClient
 
-import girder_client
 
-def main(args):  
-    
-    sys.stdout.flush()
+def main():
+    item_id = os.environ['ITEM_ID']
+    storage_api_url = os.environ['STORAGE_API_URL']
+    job_auth_token = os.environ['JOB_AUTH_TOKEN']
+    job_type = os.environ.get('TYPE', 'Feature_Pipeline')
 
-    # Arguments: 
-    # girderApiUrl = URL used for girder WebAPI calls
-    # input_image = girder item id for current whole slide image
-    # threshold_nuclei, minsize_nuclei, threshold_PAS, minsize_PAS, threshold_LS, minsize_LS = subcompartment segmentation parameters
+    client = StorageClient(storage_api_url, job_auth_token)
 
-    # Setting up girder client (initializing with user session token)
-    gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
-    gc.setToken(args.girderToken)
-
-    # Finding the id for the current WSI (input_image)
-    file_id = args.input_image
-    file_info = gc.get(f'/file/{file_id}')
-    item_id = file_info['itemId']
-
-    item_info = gc.get(f'/item/{item_id}')
-
-    file_name = file_info['name']
-    print(f'Running on: {file_name}')
-
-    if os.path.exists('/mnt/girder_worker'):
-        print('Using /mnt/girder_worker as mounted path')
-        mounted_path = '{}/{}'.format('/mnt/girder_worker', os.listdir('/mnt/girder_worker')[0])
-    else:
-        print('Using /tmp/ as mounted path')
-        mounted_path = os.getenv('TMPDIR')
-    file_path = '{}/{}'.format(mounted_path,file_name)
-    gc.downloadFile(file_id, file_path)
-
+    mounted_path = os.getenv('TMPDIR', '/tmp')
+    print(f'Downloading input for item {item_id} to {mounted_path}')
+    file_path = client.download_input(item_id, mounted_path)
     print(f'This is slide path: {file_path}')
 
     slide = TiffSlide(file_path)
@@ -47,57 +25,44 @@ def main(args):
     print(f'Read the slide with dimensions: {dim_x, dim_y}')
 
     # Converting sub-compartment segmentation parameters to correct format
-    thresh_nuc = int(args.threshold_nuclei)
-    minsize_nuc = int(args.minsize_nuclei)
-    thresh_pas = int(args.threshold_PAS)
-    minsize_pas = int(args.minsize_PAS)
-    thresh_ls = int(args.threshold_LS)
-    minsize_ls = int(args.minsize_LS)
+    # env var names/casing match api/services/job_dispatch_common.py's build_job_env() exactly —
+    # these come straight from the canonical_values dict, not an uppercase convention
+    thresh_nuc = int(os.environ.get('threshold_nuclei', '200'))
+    minsize_nuc = int(os.environ.get('minsize_nuclei', '20'))
+    thresh_pas = int(os.environ.get('threshold_PAS', '50'))
+    minsize_pas = int(os.environ.get('minsize_PAS', '20'))
+    thresh_ls = int(os.environ.get('threshold_LS', '0'))
+    minsize_ls = int(os.environ.get('minsize_LS', '0'))
 
-    # Combining paramters into usable list
     sub_seg_params = [
-        {
-            'name':'Nuclei',
-            'threshold': thresh_nuc,
-            'min_size': minsize_nuc
-        },
-        {
-            'name':'Eosinophilic',
-            'threshold': thresh_pas,
-            'min_size': minsize_pas
-        },
-        {
-            'name':'Luminal Space',
-            'threshold': thresh_ls,
-            'min_size': minsize_ls
-        }
+        {'name': 'Nuclei', 'threshold': thresh_nuc, 'min_size': minsize_nuc},
+        {'name': 'Eosinophilic', 'threshold': thresh_pas, 'min_size': minsize_pas},
+        {'name': 'Luminal Space', 'threshold': thresh_ls, 'min_size': minsize_ls},
     ]
 
-    # Getting list of features to calculate
-    feature_list = ['Distance Transform Features','Color Features','Texture Features','Morphological Features']
+    feature_list = ['Distance Transform Features', 'Color Features', 'Texture Features', 'Morphological Features']
 
-    # Getting structures to skip
-    skip_structures = args.ignoreAnns.split(',')
-    if not type(skip_structures)==list:
-        skip_structures = [skip_structures]
+    skip_structures = os.environ.get(
+        'IGNORE_ANNS', 'tubules,cortical_interstitium,medullary_interstitium').split(',')
     skip_structures = [layer.strip() for layer in skip_structures]
 
     output_path = '/tmp/'
 
     FeatureExtractor(
-        gc = gc,
-        slide = slide,
-        slide_item_id = item_id,
+        client=client,
+        slide=slide,
+        slide_item_id=item_id,
         sub_seg_params=sub_seg_params,
-        feature_list = feature_list,
-        skip_structures = skip_structures,
-        test_run = args.type == 'Test_Run',
-        output_path = output_path,
-        replace_annotations = args.replace_annotations,
-        returnXlsx = args.returnXlsx,
-        glom_index = int(args.glom_index),
-        vessel_index = int(args.vessel_index)
+        feature_list=feature_list,
+        skip_structures=skip_structures,
+        test_run=job_type == 'Test_Run',
+        output_path=output_path,
+        replace_annotations=os.environ.get('REPLACE_ANNOTATIONS', 'false').lower() == 'true',
+        returnXlsx=os.environ.get('RETURN_XLSX', 'true').lower() == 'true',
+        glom_index=int(os.environ.get('GLOM_INDEX', '-1')),
+        vessel_index=int(os.environ.get('VESSEL_INDEX', '-1')),
     )
 
+
 if __name__ == "__main__":
-    main(CLIArgumentParser().parse_args())
+    main()
